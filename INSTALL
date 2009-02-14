@@ -1,0 +1,5 @@
+Installation Instructions
+
+make should do what it needs to and generate a binary to run in the "bin" directory. It probably won't, but hey :)
+
+Editing the common.mk file is currently necessary, to point out where certain libraries are. This will be updated in due course (i.e. when I figure out how to)
