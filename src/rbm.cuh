@@ -41,6 +41,16 @@
 class RBM{
 
 	public:
+
+
+		/* 
+		 * This is used to update the parameters like the learning rates
+		 * momentum, decay, etc. Updater is an abstract class, there are
+		 * certain functions which must be called. Other than that, go
+		 * wild.
+		 */
+		Updater *parameterUpdater;
+
 		int numberOfNeuronLayers;
 		int *layerSizes;
 		
@@ -98,9 +108,9 @@ class RBM{
 
 		// Function Declarations
 
-		void alternatingGibbsSampling(int layer);
-		void pushUp(int layer, float* d_input);
-		void pushDown(int layer, float* d_output);
-		// Will be an overidable function
-		void updateLearningRates();
-		
+		void alternatingGibbsSampling(int layer, int iterations, bool stochasticInput=false, bool stochasticOutput=false, bool startAtTop=false);
+		void pushUp(int layer, bool input_t0, bool output_t0);
+		void pushDown (int layer, bool input_t0, bool output_t0);
+
+		void updateWeightsInLayer(int layer);
+}		
