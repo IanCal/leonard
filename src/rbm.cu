@@ -15,6 +15,27 @@
  *   along with RBM-on-GPU.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Need to cut down on the includes, these are the max required, not sure
+// which are needed
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include  <sys/timeb.h>
+#include <allegro.h>
+
+//mmap stuff
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+
+
+/* Includes, cuda */
+#include "cublas.h"
+#include "kernels.cu"
 #include "rbm.cuh"
 
 
@@ -22,14 +43,17 @@
  * The actual code for the RBM goes in here
  */
 
-RBM::pushDown(int layer, bool input_t0, bool output_t0, bool useProbabilities){
+RBM::RBM(char *message){
+	printf("%s \n",message);
+};
+
+void RBM::pushDown(int layer, bool input_t0, bool output_t0, bool useProbabilities){
 
 	//Basic variables
 	
 	int inputs = layerSizes[layer];
 	int outputs = layerSizes[layer+1];
 	int inputBatchSize = inputs * batchSize;
-	int outputBatchSize = outputs * batchSize;
 	int numberOfBlocks = inputBatchSize/blockSize + (inputBatchSize%blockSize == 0?0:1);
 
 	//device pointers
@@ -73,13 +97,12 @@ RBM::pushDown(int layer, bool input_t0, bool output_t0, bool useProbabilities){
 
 };
 
-RBM::pushUp(int layer, bool input_t0, bool output_t0, bool useProbabilities){
+void RBM::pushUp(int layer, bool input_t0, bool output_t0, bool useProbabilities){
 
 	//Basic variables
 	
 	int inputs = layerSizes[layer]+labelSizes[layer];
 	int outputs = layerSizes[layer+1];
-	int inputBatchSize = inputs * batchSize;
 	int outputBatchSize = outputs * batchSize;
 	int numberOfBlocks = outputBatchSize/blockSize + (outputBatchSize%blockSize == 0?0:1);
 
@@ -119,11 +142,11 @@ RBM::pushUp(int layer, bool input_t0, bool output_t0, bool useProbabilities){
 	probabilities<<<numberOfBlocks,blockSize>>>(d_output_p, d_outputBiases[layer], outputBatchSize);
 	
 	//cutoff kernel
-	cutoff<<<numberOfBlocks,blockSize>>>(d_output_p, d_outout, d_randomNumbers, outputBatchSize);
+	cutoff<<<numberOfBlocks,blockSize>>>(d_output_p, d_output, d_randomNumbers, outputBatchSize);
 
 };
 
-RBM::alternatingGibbsSampling(int layer, int iterations, bool probabilisticInput, bool probabilisticOutput, bool startAtTop){
+void RBM::alternatingGibbsSampling(int layer, int iterations, bool probabilisticInput, bool probabilisticOutput, bool startAtTop){
 
 	// Push up the initial pattern, then down to the inputs
 	if (!startAtTop)
@@ -140,39 +163,50 @@ RBM::alternatingGibbsSampling(int layer, int iterations, bool probabilisticInput
 	
 };
 
-RBM::updateWeightsInLayer(int layer){
+void RBM::updateBiasesInLayer(int layer){
+	int inputs = layerSizes[layer]+labelSizes[layer];
+	int outputs = layerSizes[layer+1];
+	int inputBatchSize = inputs * batchSize;
+	int outputBatchSize = outputs * batchSize;
 
-	// Update the visible biases
-	biasesIncrease<<<nBlocksForInBiases,blockSize>>>(d_input_pattern, d_visible_biases, biasLearningRate, inputSize/batchSize);
-	biasesDecrease<<<nBlocksForInBiases,blockSize>>>(d_input_p_t1, d_visible_biases, biasLearningRate, inputSize/batchSize, 0.0);
+	int nBlocksForInBiases = inputs/blockSize + (inputs%blockSize == 0?0:1);
+	int nBlocksForOutBiases = outputs/blockSize + (outputs%blockSize == 0?0:1);
 
-	// Update the hidden biases
-	biasesIncrease<<<nBlocksForOutBiases,blockSize>>>(d_output_p_t0, d_hidden_biases, biasLearningRate, outputSize/batchSize);
-	biasesDecrease<<<nBlocksForOutBiases,blockSize>>>(d_output_p_t1, d_hidden_biases, biasLearningRate, outputSize/batchSize, 0.0);
+	// Update the input biases
+	biasesIncrease<<<nBlocksForInBiases,blockSize>>>(d_input_pt0[layer], d_inputBiases[layer], biasLearningRates[layer], inputBatchSize/batchSize);
+	biasesDecrease<<<nBlocksForInBiases,blockSize>>>(d_input_ptn[layer], d_inputBiases[layer], biasLearningRates[layer], inputBatchSize/batchSize, 0.0);
 
-	// Update the weights
-	cublasSgemm('T','n',outputs,inputs,batchSize,
-			learningRate,d_output_p_t0,batchSize,
-			d_input_pattern,batchSize,
-			1.f,d_weights,outputs);
-	checkError(cublasGetError());
-
-	cublasSgemm('T','n',outputs,inputs,batchSize,
-			-learningRate,d_output_p_t1,batchSize,
-			d_input_p_t1,batchSize,
-			weightDecay,d_weights,outputs);
-	checkError(cublasGetError());
+	// Update the output biases
+	biasesIncrease<<<nBlocksForOutBiases,blockSize>>>(d_output_pt0[layer], d_outputBiases[layer], biasLearningRates[layer], outputBatchSize/batchSize);
+	biasesDecrease<<<nBlocksForOutBiases,blockSize>>>(d_output_ptn[layer], d_outputBiases[layer], biasLearningRates[layer], outputBatchSize/batchSize, 0.0);
 
 };
 
-RBM::updateWeights(){
+void RBM::updateWeightsInLayer(int layer){
+	int inputs = layerSizes[layer]+labelSizes[layer];
+	int outputs = layerSizes[layer+1];
+	// Update the weights
+	cublasSgemm('T','n',outputs,inputs,batchSize,
+			learningRates[layer],d_output_pt0[layer],batchSize,
+			d_input_pt0[layer],batchSize,
+			1.f,d_weights[layer],outputs);
+	//checkError(cublasGetError());
+
+	cublasSgemm('T','n',outputs,inputs,batchSize,
+			-learningRates[layer],d_output_ptn[layer],batchSize,
+			d_input_ptn[layer],batchSize,
+			weightDecay[layer],d_weights[layer],outputs);
+
+};
+
+void RBM::updateWeights(){
 
 	int topRequiredLayer=0;
 
 	// We need to know the top layer with a learning rate
-	for( int layer=0 ; layer<layers ; layer++ )
+	for( int layer=0 ; layer<numberOfNeuronLayers ; layer++ )
 	{
-		if( learningRate[layer]!=0.0 )
+		if( learningRates[layer]!=0.0 )
 		{
 			topRequiredLayer=layer;
 		}
@@ -180,8 +214,8 @@ RBM::updateWeights(){
 	
 
 	for( int layer=0 ; layer<topRequiredLayer; layer++ ){
-		if( learningRate[layer]==0 ){
-			pushUp(layer, true, true);
+		if( learningRates[layer]==0 ){
+			pushUp(layer, true, true, true);
 		}
 		else{
 			alternatingGibbsSampling(layer, CDSamples);
@@ -191,11 +225,11 @@ RBM::updateWeights(){
 
 };
 
-RBM::setInputPattern(){
-	inputSource->nextInput(d_input_pt0[0], layerSizes[0]+labelSizes[0]);
+void RBM::setInputPattern(){
+	//inputSource->nextInput(d_input_pt0[0], layerSizes[0]+labelSizes[0]);
 };
 
-RBM::learningIteration(){
+void RBM::learningIteration(){
 	
 	setInputPattern();
 	updateWeights();
@@ -203,5 +237,5 @@ RBM::learningIteration(){
 	// current run number, layer, etc.
 	// Or maybe the controller should keep track of this...
 	// Yes, because it's the only one that knows what's happening.
-	parameterUpdater->updateParameters(this);
+	//parameterUpdater->updateParameters(this);
 };

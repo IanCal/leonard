@@ -37,9 +37,9 @@
 EXECUTABLE	:=	rbm 
 # Cuda source files (compiled with cudacc)
 CUFILES		:=  rbm.cu
-# CU_DEPS		:= weights_kernel.cu
+CU_DEPS		:= 	kernels.cu rbm.cuh
 # C/C++ source files (compiled with gcc / c++)
-#CFILES		:= simpleCUBLAS.c
+CFILES		:=	example.cpp 
 
 # Additional libraries needed by the project
 USECUBLAS       := 1

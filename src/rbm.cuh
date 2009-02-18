@@ -15,32 +15,14 @@
  *   along with RBM-on-GPU.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Need to cut down on the includes, these are the max required, not sure
-// which are needed
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include  <sys/timeb.h>
-#include <allegro.h>
-
-//mmap stuff
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-
-
-/* Includes, cuda */
-#include "cublas.h"
-#include "kernels.cu"
-
+#ifndef RBM_HEADER
+#define RBM_HEADER
 
 class RBM{
 
 	public:
+	
+		RBM(char *message);
 
 
 		/* 
@@ -49,7 +31,9 @@ class RBM{
 		 * certain functions which must be called. Other than that, go
 		 * wild.
 		 */
-		Updater *parameterUpdater;
+		//Updater *parameterUpdater;
+		int batchSize;
+		int CDSamples;
 
 		int numberOfNeuronLayers;
 		int *layerSizes;
@@ -58,10 +42,10 @@ class RBM{
 		// It's equal to numberOfNeuronLayers-1
 		int numberOfWeightLayers;
 
-		int *numberOfLabels;
+		int *labelSizes;
 		
 		float *learningRates;
-		float *learningRateDecay;
+		float *biasLearningRates;
 		float *weightDecay;
 		float *momentum;
 
@@ -71,6 +55,7 @@ class RBM{
 		 * things like random numbers.
 		 */ 
 		float *scratch;
+		float *d_randomNumbers;
 
 		// Device pointers
 		
@@ -80,6 +65,7 @@ class RBM{
 		 * referencing them)
 		 */
 		float **d_input_t0;
+		float **d_input_pt0;
 		// The inputs at time N and probabilities at time N
 		// respectively
 		float **d_input_tn;
@@ -94,8 +80,13 @@ class RBM{
 		float **d_output_pt0;
 		// The inputs at time N and probabilities at time N
 		// respectively
-		float **d_input_tn;
-		float **d_input_ptn;
+		float **d_output_tn;
+		float **d_output_ptn;
+
+		// Biases
+		
+		float **d_inputBiases;
+		float **d_outputBiases;
 
 		// Weights
 		// Stored in the following way:
@@ -108,9 +99,15 @@ class RBM{
 
 		// Function Declarations
 
-		void alternatingGibbsSampling(int layer, int iterations, bool stochasticInput=false, bool stochasticOutput=false, bool startAtTop=false);
-		void pushUp(int layer, bool input_t0, bool output_t0);
-		void pushDown (int layer, bool input_t0, bool output_t0);
+		void alternatingGibbsSampling(int layer, int iterations, bool probabilisticInput=false, bool probabilisticOutput=false, bool startAtTop=false);
+		void pushUp(int layer, bool input_t0, bool output_t0, bool useProbabilities);
+		void pushDown (int layer, bool input_t0, bool output_t0, bool useProbabilities);
 
 		void updateWeightsInLayer(int layer);
-}		
+		void updateWeights();
+		void setInputPattern();
+		void learningIteration();
+		void updateBiasesInLayer(int layer);
+};	
+#endif
+
