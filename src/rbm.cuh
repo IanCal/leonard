@@ -18,11 +18,13 @@
 #ifndef RBM_HEADER
 #define RBM_HEADER
 
+class ParameterController;
+
 class RBM{
 
 	public:
 	
-		RBM(char *message);
+		RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterController *parameterController);
 
 
 		/* 
@@ -31,7 +33,7 @@ class RBM{
 		 * certain functions which must be called. Other than that, go
 		 * wild.
 		 */
-		//Updater *parameterUpdater;
+		ParameterController *parameterUpdater;
 		int batchSize;
 		int CDSamples;
 

@@ -37,14 +37,37 @@
 #include "cublas.h"
 #include "kernels.cu"
 #include "rbm.cuh"
+#include "ParameterController.cuh"
 
 
 /* 
  * The actual code for the RBM goes in here
  */
 
-RBM::RBM(char *message){
-	printf("%s \n",message);
+RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterController *parameterController){
+	printf("Creating RBM with \n");
+	numberOfWeightLayers=numLayers-1;
+	numberOfNeuronLayers=numLayers;
+	learningRates = new float[numLayers]; 
+	momentum = new float[numLayers];
+	parameterUpdater = parameterController; 	
+	parameterUpdater->initialise(this);
+	// Need to define the device variables
+	for( int layer=0 ; layer<numberOfNeuronLayers-1 ; layer++ )
+	{
+		//set 
+		//d_input_t0[layer]
+		//d_input_pt0[layer];
+		//d_input_tn[layer]
+		//d_input_ptn[layer]
+		//d_output_t0[layer]=d_input_t0[layer+1];s
+		//d_weights
+		//d_inputBiases
+		//d_outputBiases
+		//
+	}
+	//final out/inputs
+	
 };
 
 void RBM::pushDown(int layer, bool input_t0, bool output_t0, bool useProbabilities){
@@ -211,7 +234,6 @@ void RBM::updateWeights(){
 			topRequiredLayer=layer;
 		}
 	}
-	
 
 	for( int layer=0 ; layer<topRequiredLayer; layer++ ){
 		if( learningRates[layer]==0 ){
@@ -233,9 +255,5 @@ void RBM::learningIteration(){
 	
 	setInputPattern();
 	updateWeights();
-	// Could be put outside of this, make it easier to pass
-	// current run number, layer, etc.
-	// Or maybe the controller should keep track of this...
-	// Yes, because it's the only one that knows what's happening.
-	//parameterUpdater->updateParameters(this);
+	parameterUpdater->updateParameters(this);
 };
