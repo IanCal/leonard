@@ -36,8 +36,8 @@
 # Add source files here
 EXECUTABLE	:=	rbm 
 # Cuda source files (compiled with cudacc)
-CUFILES		:=  rbm.cu SimpleController.cu
-CU_DEPS		:= 	kernels.cu rbm.cuh ParameterController.cuh SimpleController.cuh
+CUFILES		:=  rbm.cu SimpleController.cu BasicFileInput.cu
+CU_DEPS		:= 	kernels.cu rbm.cuh ParameterController.cuh SimpleController.cuh BasicFileInput.cu BasicFileInput.cuh
 # C/C++ source files (compiled with gcc / c++)
 CFILES		:=	example.cpp 
 
