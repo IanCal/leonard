@@ -20,7 +20,7 @@
 class InputSource{
 	public:
 		InputSource(){};
-		virtual float* getNextInput(RBM *currentRBM, int inputSize, int batchSize){return 0;};
+		virtual float* getNextInput(RBM *currentRBM){return 0;};
 		virtual void initialise(RBM *currentRBM){};
 };
 #endif

@@ -25,7 +25,7 @@ class RBM{
 
 	public:
 	
-		RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterController *parameterController);
+		RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterController *parameterController, int batchSize);
 
 
 		/* 

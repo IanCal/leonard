@@ -38,11 +38,11 @@ class BasicFileInput: public InputSource{
 		BasicFileInput(char *imagesFileName, char *labelsFileName, int length);
 
 
-		void setImagesFile(char *filename, int length, int itemSize);
+		void setImagesFile(char *filename, int length, int itemSize, int batchSize);
 		void setLabelsFile(char *filename, int length);
 		
 		float* getNextInput(RBM *currentRBM);
-		float** getNextLabels(RBM *currentRBM);
+		float** getNextLabel(RBM *currentRBM);
 
 		void initialise(RBM *currentRBM);
 };

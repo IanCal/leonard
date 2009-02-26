@@ -44,11 +44,11 @@ void drawImage(BITMAP *buffer, int xPos, int yPos, int scale, int width, int hei
 
 int main(int argc, char *argv[])
 {
-	int layerSizes[4] = {10,10,10,10};
+	int layerSizes[4] = {784,10,10,10};
 	int labelSizes[4] = {0,0,0,10};
 	SimpleController* basicController = new SimpleController(0.01,1000,5);
-	BasicFileInput*   basicInput = new BasicFileInput(argv[1],50000,28*28, 32);
-	RBM *a = new RBM(4,layerSizes,labelSizes,basicController);
+	BasicFileInput*   basicInput = new BasicFileInput(argv[1],argv[1],50000);
+	RBM *a = new RBM(4,layerSizes,labelSizes,basicController,32);
 
 	// testing of reading
 	// Start allegro	
@@ -73,11 +73,11 @@ int main(int argc, char *argv[])
 
 	buffer = create_bitmap(SCREEN_W, SCREEN_H);
 	set_palette(desktop_palette);
-float *current=basicInput->getNextInput(a,28*28,32);
+float *current=basicInput->getNextInput(a);
 	//Drawing loop
 	while (!key[KEY_ESC]){
 		if (key[KEY_DOWN]){
-			current=basicInput->getNextInput(a,28*28,32);
+			current=basicInput->getNextInput(a);
 			rest(10);
 		}
 		else{

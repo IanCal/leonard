@@ -31,13 +31,14 @@
 #include  <sys/timeb.h>
 #include <allegro.h>
 
-BasicFileInput::BasicFileInput(char *imagesFileName, char *labelsFileName, int length);
-
+BasicFileInput::BasicFileInput(char *imagesFileName, char *labelsFileName, int length)
 {
 	//Set the basic variables
 	currentItem = 0;
 	totalItems = length;
 	initialised = false;
+	this->imagesFileName=imagesFileName;
+	this->labelsFileName=labelsFileName;
 
 }
 
@@ -45,24 +46,24 @@ void BasicFileInput::setImagesFile(char *filename, int length, int itemSize, int
 {
 
 	//Need to initialise the array that will store the image
-	inputColumnMajor = (float*) malloc(batchSize*itemLength * sizeof(float));	
+	inputColumnMajor = (float*) malloc(batchSize*itemSize * sizeof(float));	
 	if (!inputColumnMajor){
 		printf("Could not allocate array of size %dMB for input file, dying\n",(length * sizeof(float))/1e6);	
 		exit(EXIT_FAILURE);
 	}
 
-	inputFile = open(inputName,O_RDONLY);
+	inputFile = open(imagesFileName,O_RDONLY);
 	if (inputFile == -1){
-		printf("Error opening the file %s", inputName);
+		printf("Error opening the file %s", imagesFileName);
 		exit(EXIT_FAILURE);
 	}
 
 	//Now mmap it so we don't need the whole file in memory at one time
 
-	inputFileMap = (float *) mmap(0, fileSize*sizeof(float), PROT_READ, MAP_SHARED, inputFile, 0);
-	if (inputFileMap == MAP_FAILED) {
+	imagesFileMap = (float *) mmap(0, length*itemSize*sizeof(float), PROT_READ, MAP_SHARED, inputFile, 0);
+	if (imagesFileMap == MAP_FAILED) {
 		close(inputFile);
-		printf("Error mmapping the file %s", inputName);
+		printf("Error mmapping the file %s", imagesFileName);
 		exit(EXIT_FAILURE);
 	}
 };
@@ -70,23 +71,32 @@ void BasicFileInput::setImagesFile(char *filename, int length, int itemSize, int
 
 float* BasicFileInput::getNextInput(RBM *currentRBM)
 {
-	int batchSize = RBM->batchSize;
-	int inputSize = RBM->layerSizes[0]-RBM->labelSizes[0];
+	if (!initialised){
+		initialise(currentRBM);
+		initialised = true;
+	}
+	int batchSize = currentRBM->batchSize;
+	int inputSize = currentRBM->layerSizes[0] - currentRBM->labelSizes[0];
+	int currentPosition = currentItem*inputSize;
 	for( int batch=0 ; batch<batchSize ; batch++ )
 	{
 		for( int i=0 ; i<inputSize ; i++ )
 		{
-			inputColumnMajor[batch+(i*batchSize)]=inputFileMap[(currentPosition+i)+inputSize*batch];
+			inputColumnMajor[batch+(i*batchSize)]=imagesFileMap[(currentPosition+i)+inputSize*batch];
 		}
 	}
-	currentPosition+=inputSize*batchSize;
-	if (currentPosition>=fileSize-(inputSize*batchSize))
-		currentPosition=0;
+	currentItem+=batchSize;
+	if (currentItem>=totalItems-batchSize)
+		currentItem=0;
 	return inputColumnMajor;
 };
 
 float** BasicFileInput::getNextLabel(RBM *currentRBM)
 {
+	if (!initialised){
+		initialise(currentRBM);
+		initialised = true;
+	}
 
 	// Set up the labels...
 };
@@ -95,7 +105,9 @@ void BasicFileInput::initialise(RBM *currentRBM)
 	// This is where pretty much everything gets initialised. 
 	// However, we're not sure if anyone has already done this
 	
+	int batchSize = currentRBM->batchSize;
+	int inputSize = currentRBM->layerSizes[0] - currentRBM->labelSizes[0];
 
-	totalItems=length;
+	setImagesFile(imagesFileName, totalItems, inputSize, batchSize);
 
 };
