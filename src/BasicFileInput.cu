@@ -31,11 +31,19 @@
 #include  <sys/timeb.h>
 #include <allegro.h>
 
-//TODO: Could probably make this a lot cleaner.
-BasicFileInput::BasicFileInput(char *inputName, int length, int itemLength, int batchSize)
+BasicFileInput::BasicFileInput(char *imagesFileName, char *labelsFileName, int length);
+
 {
-	currentPosition=0;
-	fileSize=length*itemLength;
+	//Set the basic variables
+	currentItem = 0;
+	totalItems = length;
+	initialised = false;
+
+}
+
+void BasicFileInput::setImagesFile(char *filename, int length, int itemSize, int batchSize)
+{
+
 	//Need to initialise the array that will store the image
 	inputColumnMajor = (float*) malloc(batchSize*itemLength * sizeof(float));	
 	if (!inputColumnMajor){
@@ -43,8 +51,6 @@ BasicFileInput::BasicFileInput(char *inputName, int length, int itemLength, int 
 		exit(EXIT_FAILURE);
 	}
 
-	//Need to open the file
-	
 	inputFile = open(inputName,O_RDONLY);
 	if (inputFile == -1){
 		printf("Error opening the file %s", inputName);
@@ -59,11 +65,13 @@ BasicFileInput::BasicFileInput(char *inputName, int length, int itemLength, int 
 		printf("Error mmapping the file %s", inputName);
 		exit(EXIT_FAILURE);
 	}
+};
 
 
-}
-float* BasicFileInput::getNextInput(RBM *currentRBM, int inputSize, int batchSize)
+float* BasicFileInput::getNextInput(RBM *currentRBM)
 {
+	int batchSize = RBM->batchSize;
+	int inputSize = RBM->layerSizes[0]-RBM->labelSizes[0];
 	for( int batch=0 ; batch<batchSize ; batch++ )
 	{
 		for( int i=0 ; i<inputSize ; i++ )
@@ -77,4 +85,17 @@ float* BasicFileInput::getNextInput(RBM *currentRBM, int inputSize, int batchSiz
 	return inputColumnMajor;
 };
 
-void BasicFileInput::initialise(RBM *currentRBM){};
+float** BasicFileInput::getNextLabel(RBM *currentRBM)
+{
+
+	// Set up the labels...
+};
+void BasicFileInput::initialise(RBM *currentRBM)
+{
+	// This is where pretty much everything gets initialised. 
+	// However, we're not sure if anyone has already done this
+	
+
+	totalItems=length;
+
+};

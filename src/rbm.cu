@@ -52,6 +52,7 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 	momentum = new float[numLayers];
 	parameterUpdater = parameterController; 	
 	parameterUpdater->initialise(this);
+
 	// Need to define the device variables
 	for( int layer=0 ; layer<numberOfNeuronLayers-1 ; layer++ )
 	{

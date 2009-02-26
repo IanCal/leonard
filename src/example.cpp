@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	int layerSizes[4] = {10,10,10,10};
 	int labelSizes[4] = {0,0,0,10};
 	SimpleController* basicController = new SimpleController(0.01,1000,5);
-	BasicFileInput*   basicInput = new BasicFileInput(argv[1],10000,28*28, 32);
+	BasicFileInput*   basicInput = new BasicFileInput(argv[1],50000,28*28, 32);
 	RBM *a = new RBM(4,layerSizes,labelSizes,basicController);
 
 	// testing of reading
@@ -57,12 +57,13 @@ int main(int argc, char *argv[])
 
 	install_mouse();
 	install_keyboard();
+	install_timer();
 	//	show_os_cursor(1);
 	enable_hardware_cursor();
 	show_os_cursor(0);
 	set_color_depth(24);
-	if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, 150, 150, 0, 0) != 0) {
-		if (set_gfx_mode(GFX_SAFE, 150, 150, 0, 0) != 0) {
+	if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, 150*9, 150*5, 0, 0) != 0) {
+		if (set_gfx_mode(GFX_SAFE, 150*9, 150*5, 0, 0) != 0) {
 			set_gfx_mode(GFX_TEXT, 0, 0, 0, 0);
 			allegro_message("Unable to set any graphic mode\n%s\n", allegro_error);
 			return 1;
@@ -72,10 +73,25 @@ int main(int argc, char *argv[])
 
 	buffer = create_bitmap(SCREEN_W, SCREEN_H);
 	set_palette(desktop_palette);
-
+float *current=basicInput->getNextInput(a,28*28,32);
 	//Drawing loop
 	while (!key[KEY_ESC]){
-		drawImage(buffer,10,10,4,28,28,basicInput->getNextInput(a,28*28,32),32,0,1,15);	
+		if (key[KEY_DOWN]){
+			current=basicInput->getNextInput(a,28*28,32);
+			rest(10);
+		}
+		else{
+			rest(10);
+		}
+		for( int x=0 ; x<8 ; x++ )
+		{
+			for( int y=0 ; y<4 ; y++ )
+			{
+				drawImage(buffer,10+150*x,10+150*y,4,28,28,current,32,x+y*8,1,15);	
+			}
+			
+		}
+		
 		blit(buffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
 	}	
 	return 0;

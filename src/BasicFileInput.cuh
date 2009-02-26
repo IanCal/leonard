@@ -21,15 +21,29 @@
 
 class BasicFileInput: public InputSource{
 	public:
-		int currentPosition;
-		int fileSize;
-		float *inputFileMap;
-		float *inputColumnMajor;
-		int inputFile;
-		char *inputFileName;
+		int currentItem;
+		int totalItems;
+		bool initialised;
+		
+		char *imagesFileName;
+		char *labelsFileName;
 
-		BasicFileInput(char *inputName, int length, int itemlength, int batchSize);
-		float* getNextInput(RBM *currentRBM, int inputSize, int batchSize);
+		float *imagesFileMap;
+		int imagesFile;
+		float *labelsFileMap;
+		int inputFile;
+
+		float *inputColumnMajor;
+
+		BasicFileInput(char *imagesFileName, char *labelsFileName, int length);
+
+
+		void setImagesFile(char *filename, int length, int itemSize);
+		void setLabelsFile(char *filename, int length);
+		
+		float* getNextInput(RBM *currentRBM);
+		float** getNextLabels(RBM *currentRBM);
+
 		void initialise(RBM *currentRBM);
 };
 #endif

@@ -19,6 +19,7 @@
 #define RBM_HEADER
 
 class ParameterController;
+class InputSource;
 
 class RBM{
 
