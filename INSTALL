@@ -1,5 +1,8 @@
 Installation Instructions
 
+Things should now compile. You need to have installed the cuda sdk, edit the makefile in the src directory to point to the main folder (needed to find a couple of directories).
+
+The example code needs allegro to run, but the biggest issue currently is that the example will only work if you have a specific file type, showing a certain type of data, of a certain length. I'll be adding more examples as the code progresses to a full working rbm.
+
 make should do what it needs to and generate a binary to run in the "bin" directory. It probably won't, but hey :)
 
-Editing the common.mk file is currently necessary, to point out where certain libraries are. This will be updated in due course (i.e. when I figure out how to)

@@ -1,31 +1,21 @@
 ################################################################################
 #
-# Copyright 1993-2006 NVIDIA Corporation.  All rights reserved.
 #
-# NOTICE TO USER:   
+#  This file is part of Leonard.
 #
-# This source code is subject to NVIDIA ownership rights under U.S. and 
-# international Copyright laws.  
+#  Foobar is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
 #
-# NVIDIA MAKES NO REPRESENTATION ABOUT THE SUITABILITY OF THIS SOURCE 
-# CODE FOR ANY PURPOSE.  IT IS PROVIDED "AS IS" WITHOUT EXPRESS OR 
-# IMPLIED WARRANTY OF ANY KIND.  NVIDIA DISCLAIMS ALL WARRANTIES WITH 
-# REGARD TO THIS SOURCE CODE, INCLUDING ALL IMPLIED WARRANTIES OF 
-# MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE.   
-# IN NO EVENT SHALL NVIDIA BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL, 
-# OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS 
-# OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
-# OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE 
-# OR PERFORMANCE OF THIS SOURCE CODE.  
+#  Foobar is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
 #
-# U.S. Government End Users.  This source code is a "commercial item" as 
-# that term is defined at 48 C.F.R. 2.101 (OCT 1995), consisting  of 
-# "commercial computer software" and "commercial computer software 
-# documentation" as such terms are used in 48 C.F.R. 12.212 (SEPT 1995) 
-# and is provided to the U.S. Government only as a commercial end item.  
-# Consistent with 48 C.F.R.12.212 and 48 C.F.R. 227.7202-1 through 
-# 227.7202-4 (JUNE 1995), all U.S. Government End Users acquire the 
-# source code with only those rights set forth herein.
+#  You should have received a copy of the GNU General Public License
+#  along with Leonard.  If not, see <http://www.gnu.org/licenses/>.
+#
 #
 ################################################################################
 #
@@ -33,20 +23,21 @@
 #
 ################################################################################
 
+# EDIT THIS LINE T
+CUDA_SDK_INSTALL_PATH := /home/ian/NVIDIA_CUDA_SDK
+
 # Add source files here
-EXECUTABLE	:=	rbm 
-# Cuda source files (compiled with cudacc)
+EXECUTABLE	:=	leonard 
+
 CUFILES		:=  rbm.cu SimpleController.cu BasicFileInput.cu
 CU_DEPS		:= 	kernels.cu rbm.cuh ParameterController.cuh SimpleController.cuh BasicFileInput.cu BasicFileInput.cuh
-# C/C++ source files (compiled with gcc / c++)
 CFILES		:=	example.cpp 
 
 # Additional libraries needed by the project
 USECUBLAS       := 1
-USEOPENCV		:= 1
 USEALLEGRO		:= 1
+
 ################################################################################
 # Rules and targets
 
-include ../common/common.mk
-#RES := $(shell ctags -R --c-kinds=+p --fields=+S .)
+include ../common.mk
