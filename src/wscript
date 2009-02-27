@@ -42,13 +42,12 @@ def build(bld):
 		vnum = '1.2.3')
 	"""
 
-	# 5. A program that links against shlib1
 	bld.new_task_gen(
 		features = 'cxx cprogram',
 		source = 'example.cpp SimpleController.cpp BasicFileInput.cpp',
 		includes = '. include',
 		uselib = 'LEONARD',
-		target = 'leonardexampletask')
+		target = 'leonardexample')
 
 	# IMPORTANT WARNING:
 	# uselib_local expects *names*, that is, the field obj.name
@@ -61,8 +60,7 @@ def build(bld):
 def set_options(opt):
 	# options defined if src/ was to be compiled as a standalone module
 	#opt.add_option('--meow', type='string', help='option hidden in the src module', dest='meow')
-	print "Set options..."
-
+	pass
 def configure(conf):
 	print "sub-configuration file called (demo)"
 

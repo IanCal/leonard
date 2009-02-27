@@ -23,10 +23,13 @@ def set_options(opt):
 	# options provided by the modules
 	opt.tool_options('compiler_cxx')
 
+	opt.add_option('--leonard-library', default=False, help='Set the library path for leonard.')
+
 	# custom options
 	#opt.add_option('--exe', action='store_true', default=False, help='Execute the program after it is compiled')
 
 def configure(conf):
+	import Options
 	# conf.env['CXX'] = Options.options.meow
 	# CXX=g++-3.0 ./waf.py configure will use g++-3.0 instead of 'g++'
 	conf.check_tool('compiler_cxx')
@@ -37,7 +40,7 @@ def configure(conf):
 	conf.sub_config('src')
 
 	conf.env['CXXFLAGS_MYPROG']='-O3'
-	conf.env['LIBPATH_LEONARD']='/home/ian/git-repositories/leonard/lib'
+	conf.env['LIBPATH_LEONARD']=Options.options.leonard_library
 	conf.env['LIB_LEONARD']='leonard'
 	conf.env['SOME_INSTALL_DIR']='/tmp/ahoy/lib/'
 
@@ -60,7 +63,7 @@ def build(bld):
 	## to trigger the glob, ad a star in the name
 	## the functions are not called if not in install mode
 	#bld.install_files('${PREFIX}', 'src/a2.h src/a1.h')
-	bld.install_files('${PREFIX}/subfolder/subsubfolder', 'src/*.h')
+	bld.install_files('${PREFIX}/include', 'src/*.h')
 	#install_as('${PREFIX}/dir/bar.png', 'foo.png')
 
 	return
