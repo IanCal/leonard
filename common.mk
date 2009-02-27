@@ -58,6 +58,7 @@ ROOTBINDIR ?= $(ROOTDIR)/./bin
 BINDIR     ?= $(ROOTBINDIR)/$(OSLOWER)
 ROOTOBJDIR ?= obj
 LIBDIR     := $(CUDA_SDK_INSTALL_PATH)/./lib
+LOCALLIBDIR := $(ROOTDIR)/./lib
 #COMMONDIR  := $(ROOTDIR)/./common
 
 # Compilers
@@ -141,7 +142,7 @@ ifeq ($(USECUDPP), 1)
 endif
 
 # Libs
-LIB       := -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) #-L$(COMMONDIR)/lib/$(OSLOWER)
+LIB       := -L$(CUDA_INSTALL_PATH)/lib -L$(LIBDIR) -L$(LOCALLIBDIR)#-L$(COMMONDIR)/lib/$(OSLOWER)
 ifeq ($(USEDRVAPI),1)
    LIB += -lcuda ${OPENGLLIB} $(PARAMGLLIB) $(RENDERCHECKGLLIB) $(CUDPPLIB) ${LIB} 
 else
@@ -178,8 +179,8 @@ endif
 
 # Lib/exe configuration
 ifneq ($(STATIC_LIB),)
-	TARGETDIR := $(LIBDIR)
-	TARGET   := $(subst .a,$(LIBSUFFIX).a,$(LIBDIR)/$(STATIC_LIB))
+	TARGETDIR := $(LOCALLIBDIR)
+	TARGET   := $(subst .a,$(LIBSUFFIX).a,$(LOCALLIBDIR)/$(STATIC_LIB))
 	LINKLINE  = ar qv $(TARGET) $(OBJS) 
 else
 	LIB += -lcutil$(LIBSUFFIX)

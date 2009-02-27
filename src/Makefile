@@ -27,11 +27,12 @@
 CUDA_SDK_INSTALL_PATH := /home/ian/NVIDIA_CUDA_SDK
 
 # Add source files here
-EXECUTABLE	:=	leonard 
+#EXECUTABLE	:=	leonard 
+STATIC_LIB := leonard.so
 
 CUFILES		:=  rbm.cu SimpleController.cu BasicFileInput.cu
 CU_DEPS		:= 	kernels.cu rbm.cuh ParameterController.cuh SimpleController.cuh BasicFileInput.cu BasicFileInput.cuh
-CFILES		:=	example.cpp 
+#CFILES		:=	example.cpp 
 
 # Additional libraries needed by the project
 USECUBLAS       := 1
