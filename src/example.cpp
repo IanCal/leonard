@@ -15,10 +15,10 @@
  *   along with Leonard.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "rbm.cuh"
-#include "SimpleController.cuh"
-#include "BasicFileInput.cuh"
-
+#include <rbm.cuh>
+#include "SimpleController.h"
+#include "BasicFileInput.h"
+/*
 #include <allegro.h>
 void drawImage(BITMAP *buffer, int xPos, int yPos, int scale, int width, int height, float *data, 
 		int batchSize=1, int displayNumber=0, int spacing=0, int backgroundColour=0){
@@ -41,6 +41,7 @@ void drawImage(BITMAP *buffer, int xPos, int yPos, int scale, int width, int hei
 	}
 	
 };	
+*/
 
 int main(int argc, char *argv[])
 {
@@ -49,7 +50,7 @@ int main(int argc, char *argv[])
 	SimpleController* basicController = new SimpleController(0.01,1000,5);
 	BasicFileInput*   basicInput = new BasicFileInput(argv[1],argv[1],50000);
 	RBM *a = new RBM(4,layerSizes,labelSizes,basicController,32);
-
+/*
 	// testing of reading
 	// Start allegro	
 	if (allegro_init() != 0)
@@ -73,8 +74,9 @@ int main(int argc, char *argv[])
 
 	buffer = create_bitmap(SCREEN_W, SCREEN_H);
 	set_palette(desktop_palette);
+	*/
 float *current=basicInput->getNextInput(a);
-	//Drawing loop
+	/*//Drawing loop
 	while (!key[KEY_ESC]){
 		if (key[KEY_DOWN]){
 			current=basicInput->getNextInput(a);
@@ -94,5 +96,6 @@ float *current=basicInput->getNextInput(a);
 		
 		blit(buffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
 	}	
+	*/
 	return 0;
 }

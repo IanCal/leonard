@@ -14,7 +14,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with Leonard.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "ParameterController.cuh"
+#include "include/ParameterController.h"
 
 class SimpleController: public ParameterController{
 	public:

@@ -36,8 +36,8 @@
 /* Includes, cuda */
 #include "cublas.h"
 #include "kernels.cu"
-#include "rbm.cuh"
-#include "ParameterController.cuh"
+#include "include/rbm.cuh"
+#include "include/ParameterController.h"
 
 
 /* 

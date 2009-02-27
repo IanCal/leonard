@@ -16,8 +16,8 @@
  */
 #ifndef BASICFILEINPUT
 #define BASICFILEINPUT
-#include "rbm.cuh"
-#include "InputSource.cuh"
+#include "include/rbm.cuh"
+#include "include/InputSource.h"
 
 class BasicFileInput: public InputSource{
 	public:

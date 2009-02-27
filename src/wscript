@@ -1,0 +1,68 @@
+#! /usr/bin/env python
+# encoding: utf-8
+# Thomas Nagy, 2006 (ita)
+
+# notes:
+# 1. We think it is good to give names to our objects
+# 2. In practice something like 'libkdegames' might do it better
+# 3. Any coincidence with characters living or dead is purely coincidental
+
+def build(bld):
+	import Options
+	"""
+	# 1. A simple program
+	bld.new_task_gen(
+		features = 'cxx cprogram',
+		source = 'a1.cpp b1.cpp b2.cpp main.cpp',
+		target = 'testprogram',
+		defines = 'LINUX=1 BIDULE')
+
+	# 2. A shared library
+	# The extension (.so) is added automatically
+	bld.new_task_gen(
+		features = 'cxx cshlib',
+		source = 'a1.cpp b1.cpp b2.cpp',
+		target = 'testshlib',
+		install_path = '${SOME_INSTALL_DIR}')
+
+	# 3. A static library
+	# The extension (.a) is added automatically
+	bld.new_task_gen(
+		features = 'cxx cstaticlib',
+		source = 'c1.cpp',
+		name = 'unique1',
+		target = 'teststaticlib')
+
+	# 4. Another shared library
+	bld.new_task_gen(
+		features = 'cxx cshlib',
+		source = 'd1.cpp',
+		target = 'shlib1',
+		name = 'john',
+		vnum = '1.2.3')
+	"""
+
+	# 5. A program that links against shlib1
+	bld.new_task_gen(
+		features = 'cxx cprogram',
+		source = 'example.cpp SimpleController.cpp BasicFileInput.cpp',
+		includes = '. include',
+		uselib = 'LEONARD',
+		target = 'leonardexampletask')
+
+	# IMPORTANT WARNING:
+	# uselib_local expects *names*, that is, the field obj.name
+	# by simplicity, when there is no ambiguity: obj.target == obj.name
+
+	# installing files, headers ..
+	#bld.install_files('${PREFIX}/include', 'a1.h')
+	#install_as('${PREFIX}/dir/ahoy.h', 'a1.h')
+
+def set_options(opt):
+	# options defined if src/ was to be compiled as a standalone module
+	#opt.add_option('--meow', type='string', help='option hidden in the src module', dest='meow')
+	print "Set options..."
+
+def configure(conf):
+	print "sub-configuration file called (demo)"
+

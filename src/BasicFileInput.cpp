@@ -14,7 +14,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with Leonard.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "BasicFileInput.cuh"
+#include "BasicFileInput.h"
 
 //mmapping
 #include <sys/types.h>
@@ -27,9 +27,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include  <sys/timeb.h>
-#include <allegro.h>
 
 BasicFileInput::BasicFileInput(char *imagesFileName, char *labelsFileName, int length)
 {
