@@ -25,7 +25,7 @@ class RBM{
 
 	public:
 	
-		RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterController *parameterController, int batchSize);
+		RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterController *parameterController, InputSource *inputSource, int batchSize);
 
 
 		/* 
@@ -35,6 +35,7 @@ class RBM{
 		 * wild.
 		 */
 		ParameterController *parameterUpdater;
+		InputSource *inputSource;
 		int batchSize;
 		int CDSamples;
 
@@ -59,6 +60,7 @@ class RBM{
 		 */ 
 		float *scratch;
 		float *d_randomNumbers;
+		int amountOfRandomNumbers;
 
 		// Device pointers
 		
@@ -111,6 +113,8 @@ class RBM{
 		void setInputPattern();
 		void learningIteration();
 		void updateBiasesInLayer(int layer);
+		void generateRandomNumbers(float scale);
+		void setZero(float *device_array, int size);
 };	
 #endif
 

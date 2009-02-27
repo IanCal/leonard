@@ -101,6 +101,7 @@ void BasicFileInput::initialise(RBM *currentRBM)
 {
 	// This is where pretty much everything gets initialised. 
 	// However, we're not sure if anyone has already done this
+	initialised=true;
 	
 	int batchSize = currentRBM->batchSize;
 	int inputSize = currentRBM->layerSizes[0] - currentRBM->labelSizes[0];

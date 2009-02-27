@@ -32,6 +32,14 @@ __global__ void probabilities( float* neurons, float* biases, int maxLength){
 	}
 };
 
+__global__ void setToValue( float* input, int maxLength, float value){
+	
+	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	if (idx<maxLength){
+		input[idx]=value;
+	}
+};
+
 __global__ void softmax(float* in, float* out){
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	in[idx]=expf(in[idx]);

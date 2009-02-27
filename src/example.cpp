@@ -16,6 +16,12 @@
  */
 
 #include <rbm.cuh>
+// which are needed
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "SimpleController.h"
 #include "BasicFileInput.h"
 /*
@@ -45,11 +51,20 @@ void drawImage(BITMAP *buffer, int xPos, int yPos, int scale, int width, int hei
 
 int main(int argc, char *argv[])
 {
-	int layerSizes[4] = {784,10,10,10};
+	int layerSizes[4] = {784,512,512,2048};
 	int labelSizes[4] = {0,0,0,10};
-	SimpleController* basicController = new SimpleController(0.01,1000,5);
+	SimpleController* basicController = new SimpleController(0.01,50000,1);
 	BasicFileInput*   basicInput = new BasicFileInput(argv[1],argv[1],50000);
-	RBM *a = new RBM(4,layerSizes,labelSizes,basicController,32);
+	RBM *a = new RBM(4,layerSizes,labelSizes,basicController,basicInput,32);
+	
+	printf("Created RBM\n");
+	printf("Trying to train\n");
+	for( int i=0 ; i<4*50000 ; i++ )
+	{
+		a->learningIteration();
+	}
+	
+	printf("rain\n");
 /*
 	// testing of reading
 	// Start allegro	
@@ -75,7 +90,6 @@ int main(int argc, char *argv[])
 	buffer = create_bitmap(SCREEN_W, SCREEN_H);
 	set_palette(desktop_palette);
 	*/
-float *current=basicInput->getNextInput(a);
 	/*//Drawing loop
 	while (!key[KEY_ESC]){
 		if (key[KEY_DOWN]){

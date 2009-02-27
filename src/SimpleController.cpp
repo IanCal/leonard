@@ -16,6 +16,10 @@
  */
 #include "SimpleController.h"
 
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 SimpleController::SimpleController(float iterationLearningRate, int samples, int epochs){
 	learningRate = iterationLearningRate;
@@ -27,15 +31,24 @@ SimpleController::SimpleController(float iterationLearningRate, int samples, int
 
 void SimpleController::updateParameters(RBM *currentRBM){
 	
-	if( currentSample<samplesPerEpoch*trainingEpochs )
+	if( currentSample>=samplesPerEpoch*trainingEpochs )
 	{
 		layerToTrain++;
+		printf("Currently training layer %d\n",layerToTrain);
+		if( layerToTrain>=currentRBM->numberOfWeightLayers )
+		{
+			learningRate=0;
+		}
 		for( int layer=0 ; layer<currentRBM->numberOfWeightLayers ; layer++ )
 		{
 			currentRBM->learningRates[layer]=0.;	
 		}
 		currentRBM->learningRates[layerToTrain]=learningRate;
+		currentSample=0;
 	}
+	currentSample++;
+	if (currentSample%1000==0)
+		printf("%d\n",currentSample);
 	
 };
 
