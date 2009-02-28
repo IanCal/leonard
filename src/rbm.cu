@@ -278,7 +278,6 @@ void RBM::alternatingGibbsSampling(int layer, int iterations, bool probabilistic
 	//Cycle doing this
 	for( int i=0 ; i<iterations-1 ; i++ )
 	{
-		printf("Gibbs!!\n");
 		pushUp(layer, false, false, probabilisticInput);
 		pushDown(layer, false, false, probabilisticOutput);
 	}
@@ -350,15 +349,14 @@ void RBM::updateWeights(){
 };
 
 void RBM::setInputPattern(){
-  cublasSetVector(layerSizes[0]*batchSize, sizeof(float), (inputSource->getNextInput(this)), 1, d_input_pt0[0], 1);
-//	cublasSetVector(layerSizes[0]*batchSize, sizeof(float), scratch, 1, d_input_pt0[0], 1);
+    cublasSetVector(layerSizes[0]*batchSize, sizeof(float), (inputSource->getNextInput(this)), 1, d_input_pt0[0], 1);
 	cudaThreadSynchronize();
 	checkError(cublasGetError());
 };
 
 void RBM::learningIteration(){
-	
 	setInputPattern();
 	updateWeights();
 	parameterUpdater->updateParameters(this);
+	generateRandomNumbers();
 };

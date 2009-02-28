@@ -46,9 +46,7 @@ void SimpleController::updateParameters(RBM *currentRBM){
 		currentRBM->learningRates[layerToTrain]=learningRate;
 		currentSample=0;
 	}
-	currentSample++;
-	if (currentSample%1000==0)
-		printf("%d\n",currentSample);
+	currentSample+=currentRBM->batchSize;
 	
 };
 
