@@ -44,6 +44,8 @@ def configure(conf):
 	conf.env['LIB_LEONARD']='leonard'
 	conf.env['SOME_INSTALL_DIR']='/tmp/ahoy/lib/'
 
+
+	conf.check_cfg(path='allegro-config', args='--cflags --libs', package='', uselib_store='ALLEGRO')
 	# works in a procedural way, so the order of calls does matter
 	#conf.check_tool(['KDE3'])
 

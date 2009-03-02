@@ -94,7 +94,7 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 	status =  CUBLAS_STATUS_SUCCESS;
 
 	// Build up the device arrays
-
+/*
 	d_input_t0 = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
 	d_input_pt0 = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
 	d_input_tn = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
@@ -103,13 +103,24 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 	d_output_pt0 = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
 	d_output_tn = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
 	d_output_ptn = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
+	*/
+	d_input_t0 = new float*[numberOfNeuronLayers];
+	d_input_tn = new float*[numberOfNeuronLayers];
+	d_input_pt0 = new float*[numberOfNeuronLayers];
+	d_input_ptn = new float*[numberOfNeuronLayers];
+	d_output_t0 = new float*[numberOfNeuronLayers];
+	d_output_tn = new float*[numberOfNeuronLayers];
+	d_output_pt0 = new float*[numberOfNeuronLayers];
+	d_output_ptn = new float*[numberOfNeuronLayers];
 	//Biases
 	d_inputBiases = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
 	d_outputBiases = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
 	//Weights
-	d_weights = (float**)malloc(numberOfWeightLayers * sizeof(float*));
+	//d_weights = (float**)malloc(numberOfWeightLayers * sizeof(float*));
+	d_weights = new float*[numberOfWeightLayers];
 	
 	amountOfRandomNumbers=0;
+	int numWBlocks;
 	for( int layer=0 ; layer<numberOfNeuronLayers ; layer++ )
 	{
 		//set 
@@ -122,7 +133,7 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 		status |= cublasAlloc((labelSizes[layer]+layerSizes[layer])*batchSize, sizeof(float), (void**)&d_input_ptn[layer]);
 		status |= cublasAlloc(layerSizes[layer]+labelSizes[layer], sizeof(float), (void**)&d_inputBiases[layer]);
 		checkError(status);
-		setZero(d_inputBiases[layer],layerSizes[layer]+labelSizes[layer]);
+		setValue(d_inputBiases[layer],layerSizes[layer]+labelSizes[layer]);
 
 		// now the output side of things
 		if( layer>0 )
@@ -138,33 +149,62 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 		checkError(status);
 			status |= cublasAlloc(layerSizes[layer+1], sizeof(float), (void**)&d_outputBiases[layer]);
 		checkError(status);
-			setZero(d_weights[layer],(layerSizes[layer]+labelSizes[layer])*layerSizes[layer+1]);
-		checkError(status);
-			setZero(d_outputBiases[layer],layerSizes[layer+1]);
-		checkError(status);
-			if ((layerSizes[layer]+labelSizes[layer])*layerSizes[layer+1]>amountOfRandomNumbers)
-				amountOfRandomNumbers=(layerSizes[layer]+labelSizes[layer])*layerSizes[layer+1];
+			checkError(status);
+			setValue(d_outputBiases[layer],layerSizes[layer+1]);
+			checkError(status);
 		}
+		if (layerSizes[layer]+labelSizes[layer]>amountOfRandomNumbers)
+			amountOfRandomNumbers=layerSizes[layer]+labelSizes[layer];
 	}
 
+	amountOfRandomNumbers*=batchSize;
+	scratch=new float[amountOfRandomNumbers];
 
-	scratch = (float*)malloc(amountOfRandomNumbers * sizeof(float));
 	status |= cublasAlloc(amountOfRandomNumbers, sizeof(float), (void**)&d_randomNumbers);
-		checkError(status);
+	checkError(status);
+	rng = new Rand48();
+	int numBlocks=amountOfRandomNumbers/blockSize + (amountOfRandomNumbers%blockSize == 0?0:1);
+	rng->init(numBlocks*blockSize, 123456);
+
 	generateRandomNumbers(1.0);
-	
+	for( int layer=0 ; layer<numberOfWeightLayers ; layer++ )
+	{
+		printf("Setting layer %d\n",layer);
+			setRandom(d_weights[layer],(layerSizes[layer]+labelSizes[layer])*layerSizes[layer+1],1.0);
+	}
+
 };
-void RBM::setZero(float *device_array, int size){
+void RBM::setValue(float *device_array, int size, float value){
 	int numBlocks=size/blockSize + (size%blockSize == 0?0:1);
-	setToValue<<<numBlocks,blockSize>>>(device_array,size,0);
+	setToValue<<<numBlocks,blockSize>>>(device_array,size,value);
 	cudaThreadSynchronize();
 };
+void RBM::setRandom(float *device_array, int size, float scale){
+
+	int numBlocks;
+    int nextChunkSize;	
+	int currentPosition=0;
+	while (currentPosition<size){
+		if (size-currentPosition>amountOfRandomNumbers)
+			nextChunkSize=amountOfRandomNumbers;
+		else
+			nextChunkSize=size-currentPosition;
+		numBlocks=nextChunkSize/blockSize + (nextChunkSize%blockSize == 0?0:1);
+		setRandomScale<<<numBlocks,blockSize>>>(&device_array[currentPosition],d_randomNumbers,nextChunkSize,scale);
+		generateRandomNumbers(1.0);
+		currentPosition+=nextChunkSize;
+	}
+
+};
 void RBM::generateRandomNumbers(float scale){
+	//int numBlocks=amountOfRandomNumbers/blockSize + (amountOfRandomNumbers%blockSize == 0?0:1);
+	//setRand<<<numBlocks,blockSize>>>(d_randomNumbers,amountOfRandomNumbers,*rng);
 	for( int i=0 ; i<amountOfRandomNumbers ; i++ )
 	{
-		scratch[i]=drand48();
+		scratch[i]=drand48()*scale;
 	}
-	cublasSetVector(amountOfRandomNumbers, sizeof(float), scratch, 1, d_randomNumbers, 1);
+    cublasSetVector(amountOfRandomNumbers, sizeof(float), scratch, 1, d_randomNumbers, 1);
+	
 	cudaThreadSynchronize();
 };
 
@@ -209,12 +249,15 @@ void RBM::pushDown(int layer, bool input_t0, bool output_t0, bool useProbabiliti
 			1.f,d_output,batchSize,
 			d_weights[layer],outputs,
 			0.f,d_input_p,batchSize);
+	checkError(cublasGetError());
 	
 	//probabilities kernel
 	probabilities<<<numberOfBlocks,blockSize>>>(d_input_p, d_inputBiases[layer], inputBatchSize);
+	checkError(cublasGetError());
 	
 	//cutoff kernel
 	cutoff<<<numberOfBlocks,blockSize>>>(d_input_p, d_input, d_randomNumbers, inputBatchSize);
+	checkError(cublasGetError());
 
 };
 
@@ -258,14 +301,17 @@ void RBM::pushUp(int layer, bool input_t0, bool output_t0, bool useProbabilities
 			1.f,d_input,batchSize,
 			d_weights[layer],outputs,
 			0.f,d_output_p,batchSize);
+	checkError(cublasGetError());
 	
 	//probabilities kernel
 	probabilities<<<numberOfBlocks,blockSize>>>(d_output_p, d_outputBiases[layer], outputBatchSize);
 	cudaThreadSynchronize();
+	checkError(cublasGetError());
 	
 	//cutoff kernel
 	cutoff<<<numberOfBlocks,blockSize>>>(d_output_p, d_output, d_randomNumbers, outputBatchSize);
 	cudaThreadSynchronize();
+	checkError(cublasGetError());
 
 };
 
@@ -273,7 +319,7 @@ void RBM::alternatingGibbsSampling(int layer, int iterations, bool probabilistic
 
 	// Push up the initial pattern, then down to the inputs
 	if (!startAtTop)
-		pushUp(layer, true, true, probabilisticInput);
+		pushUp(layer, true, true, true);
 	pushDown(layer, false, true, probabilisticOutput);
 	//Cycle doing this
 	for( int i=0 ; i<iterations-1 ; i++ )
@@ -318,7 +364,7 @@ void RBM::updateWeightsInLayer(int layer){
 	cublasSgemm('T','n',outputs,inputs,batchSize,
 			-learningRates[layer],d_output_ptn[layer],batchSize,
 			d_input_ptn[layer],batchSize,
-			1.f,d_weights[layer],outputs);
+			1.0f,d_weights[layer],outputs);
 	checkError(cublasGetError());
 
 };
@@ -354,9 +400,15 @@ void RBM::setInputPattern(){
 	checkError(cublasGetError());
 };
 
+void RBM::getReconstruction(int layer, float *output){
+	cublasGetVector(layerSizes[layer]*batchSize, sizeof(float), d_input_ptn[layer], 1, output, 1);
+	//cublasGetVector(layerSizes[layer]*batchSize, sizeof(float), d_weights[layer], 1, output, 1);
+
+};
+
 void RBM::learningIteration(){
 	setInputPattern();
 	updateWeights();
 	parameterUpdater->updateParameters(this);
-	generateRandomNumbers();
+	generateRandomNumbers(1.0f);
 };

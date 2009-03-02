@@ -22,6 +22,10 @@
 #define BATCHSIZE 512
 #define WEIGHTDECAY 1.0
 
+#include "randomNumbers.cu"
+
+
+
 //need to add temperature to this really for sim allealing.
 __global__ void probabilities( float* neurons, float* biases, int maxLength){
 	
@@ -39,6 +43,23 @@ __global__ void setToValue( float* input, int maxLength, float value){
 		input[idx]=value;
 	}
 };
+__global__ void setRandomScale( float* input, float* random, int maxLength, float scale){
+	
+	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	if (idx<maxLength){
+		input[idx]=(scale/2.)-random[idx]*scale;
+	}
+};
+__global__ void setRand( float* input, int maxLength, Rand48 rng){
+    
+	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	if (idx<maxLength){
+		rand48_loadState(rng);
+		input[idx]= rand48_nextFloat(rng);
+		rand48_storeState(rng);
+	}
+};
+
 
 __global__ void softmax(float* in, float* out){
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -76,6 +97,7 @@ __global__ void biasesDecrease(float* in, float* out, float learningRate, int ma
 		out[idx]-=in[idx*BATCHSIZE + i]*learningRate + sparsity;
 	}	
 };
+
 
 __global__ void cutoff( float* neurons_in, float* neurons_out, float* random, int maxLength){
     

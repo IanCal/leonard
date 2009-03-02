@@ -21,10 +21,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include  <sys/timeb.h>
 
 #include "SimpleController.h"
 #include "BasicFileInput.h"
-/*
 #include <allegro.h>
 void drawImage(BITMAP *buffer, int xPos, int yPos, int scale, int width, int height, float *data, 
 		int batchSize=1, int displayNumber=0, int spacing=0, int backgroundColour=0){
@@ -47,25 +48,29 @@ void drawImage(BITMAP *buffer, int xPos, int yPos, int scale, int width, int hei
 	}
 	
 };	
-*/
 
 int main(int argc, char *argv[])
 {
-	int layerSizes[4] = {784,512,512,2048};
+	int layerSizes[4] = {784,784,512,2048};
 	int labelSizes[4] = {0,0,0,10};
-	SimpleController* basicController = new SimpleController(0.01,50000,1);
+	SimpleController* basicController = new SimpleController(0.005,50000,1);
 	BasicFileInput*   basicInput = new BasicFileInput(argv[1],argv[1],50000);
 	RBM *a = new RBM(4,layerSizes,labelSizes,basicController,basicInput,32);
 	
 	printf("Created RBM\n");
 	printf("Trying to train\n");
-	for( int i=0 ; i<4*50000 ; i++ )
+	
+	
+time_t start, end;
+time(&start);
+	for( int i=0 ; i<50000/32 ; i++ )
 	{
 		a->learningIteration();
 	}
-	
+time(&end);
+
+printf("Took %f\n",difftime(end,start));
 	printf("rain\n");
-/*
 	// testing of reading
 	// Start allegro	
 	if (allegro_init() != 0)
@@ -87,13 +92,22 @@ int main(int argc, char *argv[])
 	}
 	BITMAP *buffer;
 
+	float *current = new float[784*32];
+	a->setInputPattern();
+	a->pushUp(0, true, true, true);
+	a->pushDown(0, false, true, true);
+	a->getReconstruction(0,current);
 	buffer = create_bitmap(SCREEN_W, SCREEN_H);
 	set_palette(desktop_palette);
-	*/
-	/*//Drawing loop
+	//Drawing loop
 	while (!key[KEY_ESC]){
 		if (key[KEY_DOWN]){
-			current=basicInput->getNextInput(a);
+			a->learningIteration();
+		/* a->setInputPattern();
+			a->pushUp(0, true, true, true);
+			a->pushDown(0, false, true, false);
+			*/
+			a->getReconstruction(0,current);
 			rest(10);
 		}
 		else{
@@ -110,6 +124,5 @@ int main(int argc, char *argv[])
 		
 		blit(buffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
 	}	
-	*/
 	return 0;
 }

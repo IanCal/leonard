@@ -61,6 +61,7 @@ class RBM{
 		float *scratch;
 		float *d_randomNumbers;
 		int amountOfRandomNumbers;
+		struct Rand48 *rng;
 
 		// Device pointers
 		
@@ -111,10 +112,12 @@ class RBM{
 		void updateWeightsInLayer(int layer);
 		void updateWeights();
 		void setInputPattern();
+		void getReconstruction(int layer, float *output);
 		void learningIteration();
 		void updateBiasesInLayer(int layer);
 		void generateRandomNumbers(float scale);
-		void setZero(float *device_array, int size);
+		void setValue(float *device_array, int size, float value=0.f);
+		void setRandom(float *device_array, int size, float scale);
 };	
 #endif
 
