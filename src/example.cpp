@@ -51,11 +51,14 @@ void drawImage(BITMAP *buffer, int xPos, int yPos, int scale, int width, int hei
 
 int main(int argc, char *argv[])
 {
-	int layerSizes[4] = {784,784,512,2048};
+	int layers=4;
+	int layerSizes[4] = {784,128,128,128};
 	int labelSizes[4] = {0,0,0,10};
-	SimpleController* basicController = new SimpleController(0.005,50000,1);
-	BasicFileInput*   basicInput = new BasicFileInput(argv[1],argv[1],50000);
-	RBM *a = new RBM(4,layerSizes,labelSizes,basicController,basicInput,32);
+	int fileSize=50000;
+	int epochs=10;
+	SimpleController* basicController = new SimpleController(0.005,fileSize,epochs);
+	BasicFileInput*   basicInput = new BasicFileInput(argv[1],argv[1],fileSize);
+	RBM *a = new RBM(layers,layerSizes,labelSizes,basicController,basicInput,32);
 	
 	printf("Created RBM\n");
 	printf("Trying to train\n");
@@ -63,13 +66,13 @@ int main(int argc, char *argv[])
 	
 time_t start, end;
 time(&start);
-	for( int i=0 ; i<50000/32 ; i++ )
+	for( int i=0 ; i<epochs*layers*(fileSize/32) ; i++ )
 	{
 		a->learningIteration();
 	}
 time(&end);
-
-printf("Took %f\n",difftime(end,start));
+float timetaken=difftime(end,start);
+printf("Took %f, running at a rate of %f/s\n",timetaken,float(fileSize*epochs)/timetaken);
 	printf("rain\n");
 	// testing of reading
 	// Start allegro	
@@ -102,11 +105,15 @@ printf("Took %f\n",difftime(end,start));
 	//Drawing loop
 	while (!key[KEY_ESC]){
 		if (key[KEY_DOWN]){
-			a->learningIteration();
-		/* a->setInputPattern();
+			//a->learningIteration();
+		    a->setInputPattern();
 			a->pushUp(0, true, true, true);
-			a->pushDown(0, false, true, false);
-			*/
+			a->pushUp(1, true, true, true);
+			a->pushUp(2, true, true, true);
+			a->pushDown(2, false, true, true);
+			a->pushDown(1, false, false, true);
+			a->pushDown(0, false, false, true);
+			
 			a->getReconstruction(0,current);
 			rest(10);
 		}
