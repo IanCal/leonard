@@ -30,16 +30,20 @@ class BasicFileInput: public InputSource{
 
 		float *imagesFileMap;
 		int imagesFile;
-		float *labelsFileMap;
 		int inputFile;
 
+		unsigned char *allLabels;
 		float *inputColumnMajor;
+		float **labelsColumnMajor;
+
+		bool iteratedOverImages;
+		bool iteratedOverLabels;
 
 		BasicFileInput(char *imagesFileName, char *labelsFileName, int length);
 
 
 		void setImagesFile(char *filename, int length, int itemSize, int batchSize);
-		void setLabelsFile(char *filename, int length);
+		void setLabelsFile(char *filename, int fileLength, int labelSize, int layers, int batchSize);
 		
 		float* getNextInput(RBM *currentRBM);
 		float** getNextLabel(RBM *currentRBM);

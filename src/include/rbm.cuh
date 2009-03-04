@@ -121,6 +121,7 @@ class RBM{
 		void updateWeightsInLayer(int layer);
 		void updateWeights();
 		void setInputPattern();
+		void setLabels();
 		void getReconstruction(int layer, float *output);
 		void learningIteration();
 		void updateBiasesInLayer(int layer);

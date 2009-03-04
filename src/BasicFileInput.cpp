@@ -65,6 +65,24 @@ void BasicFileInput::setImagesFile(char *filename, int length, int itemSize, int
 	}
 };
 
+void BasicFileInput::setLabelsFile(char *filename, int fileLength, int labelSize, int layers, int batchSize)
+{
+	labelsColumnMajor = new float*[layers];
+	for( int i=0 ; i<layers ; i++ )
+	{
+		labelsColumnMajor[i]= new float[batchSize*labelSize];
+		for( int j=0 ; j<labelSize*batchSize ; j++ )
+		{
+			labelsColumnMajor[i][j]=0.0f;
+		}
+		
+	}
+	allLabels = new unsigned char[fileLength];
+	FILE *f=fopen(filename,"r");
+	fread(&allLabels,sizeof(unsigned char),fileLength,f);
+	fclose(f);
+};
+
 
 float* BasicFileInput::getNextInput(RBM *currentRBM)
 {
@@ -82,9 +100,14 @@ float* BasicFileInput::getNextInput(RBM *currentRBM)
 			inputColumnMajor[batch+(i*batchSize)]=imagesFileMap[(currentPosition+i)+inputSize*batch];
 		}
 	}
-	currentItem+=batchSize;
-	if (currentItem>=totalItems-batchSize)
-		currentItem=0;
+	iteratedOverImages=true;
+	if (iteratedOverLabels){
+		currentItem+=batchSize;
+		if (currentItem>=totalItems-batchSize)
+			currentItem=0;
+		iteratedOverLabels=false;
+		iteratedOverImages=false;
+	}
 	return inputColumnMajor;
 };
 
@@ -94,18 +117,48 @@ float** BasicFileInput::getNextLabel(RBM *currentRBM)
 		initialise(currentRBM);
 		initialised = true;
 	}
+	int batchSize = currentRBM->batchSize;
+	int labelSize = currentRBM->labelSizes[currentRBM->numberOfNeuronLayers-1];
 
-	// Set up the labels...
+	for( int batch=0 ; batch<batchSize ; batch++ )
+	{
+		for( int i=0 ; i<labelSize ; i++ )
+		{
+			if( (int)allLabels[currentItem+batch]==i )
+			{
+				labelsColumnMajor[currentRBM->numberOfNeuronLayers-1][batch+(i*batchSize)]=1.0;
+			}
+			else
+			{
+				labelsColumnMajor[currentRBM->numberOfNeuronLayers-1][batch+(i*batchSize)]=0.0;
+			}
+		}
+	}
+	
+	iteratedOverLabels=true;
+	if (iteratedOverImages){
+		currentItem+=batchSize;
+		if (currentItem>=totalItems-batchSize)
+			currentItem=0;
+		iteratedOverLabels=false;
+		iteratedOverImages=false;
+	}
+	return labelsColumnMajor;
 };
 void BasicFileInput::initialise(RBM *currentRBM)
 {
 	// This is where pretty much everything gets initialised. 
 	// However, we're not sure if anyone has already done this
 	initialised=true;
+	iteratedOverImages=false;
+	iteratedOverLabels=false;
 	
 	int batchSize = currentRBM->batchSize;
 	int inputSize = currentRBM->layerSizes[0] - currentRBM->labelSizes[0];
+	int layers = currentRBM->numberOfNeuronLayers;
+	int labelSize = currentRBM->labelSizes[currentRBM->numberOfNeuronLayers-1];
 
 	setImagesFile(imagesFileName, totalItems, inputSize, batchSize);
+	setLabelsFile(labelsFileName, totalItems, labelSize, layers, batchSize);
 
 };

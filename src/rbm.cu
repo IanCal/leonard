@@ -402,6 +402,20 @@ void RBM::setInputPattern(){
 	checkError(cublasGetError());
 };
 
+void RBM::setLabels(){
+    //cublasSetVector(layerSizes[0]*batchSize, sizeof(float), (inputSource->getNextInput(this)), 1, d_input_pt0[0], 1);
+	float **currentLabels = inputSource->getNextLabel(this);
+	for( int layer=0 ; layer<numberOfNeuronLayers ; layer++ )
+	{
+		if( labelSizes[layer]>0 )
+		{
+			//set vector
+    		cublasSetVector(labelSizes[layer]*batchSize, sizeof(float), (inputSource->labelsColumnMajor), 1, d_[0], 1);
+		}
+	}
+	
+};
+
 void RBM::getReconstruction(int layer, float *output){
 	cublasGetVector(layerSizes[layer]*batchSize, sizeof(float), d_input_ptn[layer], 1, output, 1);
 };
