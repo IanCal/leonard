@@ -60,32 +60,29 @@ __global__ void setRandomScale( float* input, float* random, int maxLength, floa
 	}
 };
 
-__global__ void biasesIncrease(float* in, float* out, float learningRate, int maxLength){
+__global__ void biasesIncrease(float* in, float* out, float learningRate, int maxLength, int batchsize){
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	//out[idx]=0.f;
 	if (idx<maxLength)
-	for( int i=0 ; i<BATCHSIZE ; i++ )
-	{
-		out[idx]+=in[idx*BATCHSIZE + i]*learningRate;
-	}	
+		for( int i=0 ; i<batchsize ; i++ )
+		{
+			out[idx]+=in[idx*batchsize + i]*learningRate;
+		}	
 };
 
-__global__ void biasesDecrease(float* in, float* out, float learningRate, int maxLength, float sparsity){
+__global__ void biasesDecrease(float* in, float* out, float learningRate, int maxLength, int batchsize, float sparsity){
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	//out[idx]=0.f;
 	if (idx<maxLength)
-	for( int i=0 ; i<BATCHSIZE ; i++ )
-	{
-		out[idx]-=in[idx*BATCHSIZE + i]*learningRate + sparsity;
-	}	
+		for( int i=0 ; i<batchsize ; i++ )
+		{
+			out[idx]-=in[idx*batchsize + i]*learningRate + sparsity;
+		}	
 };
 
 __global__ void cutoff( float* neurons_in, float* neurons_out, float* random, int maxLength){
     
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	if (idx<maxLength)
-	neurons_out[idx]= (random[idx] < neurons_in[idx]) ? 1. : 0.;
-	//neurons_out[idx]=neurons_in[idx];
+		neurons_out[idx]= (random[idx] < neurons_in[idx]) ? 1. : 0.;
 };
 
 

@@ -85,6 +85,14 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 	labelSizes=sizeOfLabels;
 	learningRates = new float[numLayers]; 
 	momentum = new float[numLayers];
+	biasLearningRates = new float[numLayers];
+	weightDecay = new float[numLayers];
+	for( int layer=0 ; layer<numberOfNeuronLayers ; layer++ )
+	{
+		learningRates[layer]=momentum[layer]=biasLearningRates[layer]=0.f;
+		weightDecay[layer]=1.f;
+	}
+	
 	parameterUpdater = parameterController; 	
 	parameterUpdater->initialise(this);
 	this->inputSource=inputSource;
@@ -102,14 +110,11 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 	d_output_tn = new float*[numberOfNeuronLayers];
 	d_output_pt0 = new float*[numberOfNeuronLayers];
 	d_output_ptn = new float*[numberOfNeuronLayers];
-	//Biases
-	d_inputBiases = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
-	d_outputBiases = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
-
+	d_inputBiases = new float*[numberOfNeuronLayers];
+	d_outputBiases = new float*[numberOfNeuronLayers];
 	d_weights = new float*[numberOfWeightLayers];
 	
 	amountOfRandomNumbers=0;
-	int numWBlocks;
 	for( int layer=0 ; layer<numberOfNeuronLayers ; layer++ )
 	{
 		//set 
@@ -331,12 +336,12 @@ void RBM::updateBiasesInLayer(int layer){
 	int nBlocksForOutBiases = outputs/blockSize + (outputs%blockSize == 0?0:1);
 
 	// Update the input biases
-	biasesIncrease<<<nBlocksForInBiases,blockSize>>>(d_input_pt0[layer], d_inputBiases[layer], biasLearningRates[layer], inputBatchSize/batchSize);
-	biasesDecrease<<<nBlocksForInBiases,blockSize>>>(d_input_ptn[layer], d_inputBiases[layer], biasLearningRates[layer], inputBatchSize/batchSize, 0.0);
+	biasesIncrease<<<nBlocksForInBiases,blockSize>>>(d_input_pt0[layer], d_inputBiases[layer], biasLearningRates[layer], inputBatchSize/batchSize, batchSize);
+	biasesDecrease<<<nBlocksForInBiases,blockSize>>>(d_input_ptn[layer], d_inputBiases[layer], biasLearningRates[layer], inputBatchSize/batchSize, batchSize, 0.0);
 
 	// Update the output biases
-	biasesIncrease<<<nBlocksForOutBiases,blockSize>>>(d_output_pt0[layer], d_outputBiases[layer], biasLearningRates[layer], outputBatchSize/batchSize);
-	biasesDecrease<<<nBlocksForOutBiases,blockSize>>>(d_output_ptn[layer], d_outputBiases[layer], biasLearningRates[layer], outputBatchSize/batchSize, 0.0);
+	biasesIncrease<<<nBlocksForOutBiases,blockSize>>>(d_output_pt0[layer], d_outputBiases[layer], biasLearningRates[layer], outputBatchSize/batchSize, batchSize);
+	biasesDecrease<<<nBlocksForOutBiases,blockSize>>>(d_output_ptn[layer], d_outputBiases[layer], biasLearningRates[layer], outputBatchSize/batchSize, batchSize, 0.0);
 
 };
 
@@ -353,7 +358,7 @@ void RBM::updateWeightsInLayer(int layer){
 	cublasSgemm('T','n',outputs,inputs,batchSize,
 			-learningRates[layer],d_output_ptn[layer],batchSize,
 			d_input_ptn[layer],batchSize,
-			1.0f,d_weights[layer],outputs);
+			weightDecay[layer],d_weights[layer],outputs);
 	checkError(cublasGetError());
 
 };
