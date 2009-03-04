@@ -31,15 +31,21 @@ class RBM{
 		RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterController *parameterController, InputSource *inputSource, int batchSize);
 
 
-		/* 
+		/** 
 		 * This is used to update the parameters like the learning rates
-		 * momentum, decay, etc. Updater is an abstract class, there are
+		 * momentum, decay, etc. ParameterUpdater is an abstract class, there are
 		 * certain functions which must be called. Other than that, go
 		 * wild.
 		 */
 		ParameterController *parameterUpdater;
+		/**
+		 * This controls the input images. It must take care of all memory related to
+		 * reading in the images. 
+		 */ 
 		InputSource *inputSource;
+		//! This is the number of images to pass every iteration.
 		int batchSize;
+		//! The number of contrastive divergence samples to be taken. Default is 1.
 		int CDSamples;
 
 		int numberOfNeuronLayers;

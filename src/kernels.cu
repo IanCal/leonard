@@ -19,23 +19,32 @@
 #define blockSize (512)
 #define WIDTH   800
 #define HEIGHT  800
-#define BATCHSIZE 512
+#define BATCHSIZE 32 
 #define WEIGHTDECAY 1.0
 
 #include "randomNumbers.cu"
 
 
-
-//need to add temperature to this really for sim allealing.
+/**
+ * Convert overall energies into probabilities based on the sigmoid function.
+ * @param neurons The neurons to operate on.
+ * @param biases The biases of the neurons. These must be the same size.
+ * @param maxLength This is the number of neurons.
+ */
 __global__ void probabilities( float* neurons, float* biases, int maxLength){
 	
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	if (idx<maxLength){
 		neurons[idx] = 1./(1.+exp(-biases[idx/BATCHSIZE]-neurons[idx]));
-		//neurons[idx] = 0.5+tanh(biases[idx/BATCHSIZE]+neurons[idx]);
 	}
 };
 
+/**
+ * Set all elements of an array to a single value. 
+ * @param input The array to work on.
+ * @param maxLength The total length of the array.
+ * @param value A floating point value to set the array to.
+ */
 __global__ void setToValue( float* input, int maxLength, float value){
 	
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -50,34 +59,7 @@ __global__ void setRandomScale( float* input, float* random, int maxLength, floa
 		input[idx]=(scale/2.)-random[idx]*scale;
 	}
 };
-__global__ void setRand( float* input, int maxLength, Rand48 rng){
-    
-	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	if (idx<maxLength){
-		rand48_loadState(rng);
-		input[idx]= rand48_nextFloat(rng);
-		rand48_storeState(rng);
-	}
-};
 
-
-__global__ void softmax(float* in, float* out){
-	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	in[idx]=expf(in[idx]);
-	out[idx%BATCHSIZE]+=in[idx];
-};
-__global__ void arrayDivide(float* in, float* out){
-	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	if (out[idx%BATCHSIZE]>0.)
-		in[idx]/=out[idx%BATCHSIZE];
-};
-/*
-__global__ void roulette(float* in){
-	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-//	if (out[idx/numLabels]>0.)
-//		in[idx]/=out[idx/numLabels];
-};
-*/
 __global__ void biasesIncrease(float* in, float* out, float learningRate, int maxLength){
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	//out[idx]=0.f;
@@ -98,7 +80,6 @@ __global__ void biasesDecrease(float* in, float* out, float learningRate, int ma
 	}	
 };
 
-
 __global__ void cutoff( float* neurons_in, float* neurons_out, float* random, int maxLength){
     
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -106,3 +87,35 @@ __global__ void cutoff( float* neurons_in, float* neurons_out, float* random, in
 	neurons_out[idx]= (random[idx] < neurons_in[idx]) ? 1. : 0.;
 	//neurons_out[idx]=neurons_in[idx];
 };
+
+
+// Currently unused:
+__global__ void setRand( float* input, int maxLength, Rand48 rng){
+    
+	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	if (idx<maxLength){
+		rand48_loadState(rng);
+		input[idx]= rand48_nextFloat(rng);
+		rand48_storeState(rng);
+	}
+};
+
+__global__ void softmax(float* in, float* out){
+	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	in[idx]=expf(in[idx]);
+	out[idx%BATCHSIZE]+=in[idx];
+};
+__global__ void arrayDivide(float* in, float* out){
+	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	if (out[idx%BATCHSIZE]>0.)
+		in[idx]/=out[idx%BATCHSIZE];
+};
+/*
+__global__ void roulette(float* in){
+	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+//	if (out[idx/numLabels]>0.)
+//		in[idx]/=out[idx/numLabels];
+};
+*/
+
+
