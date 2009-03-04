@@ -94,16 +94,6 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 	status =  CUBLAS_STATUS_SUCCESS;
 
 	// Build up the device arrays
-/*
-	d_input_t0 = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
-	d_input_pt0 = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
-	d_input_tn = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
-	d_input_ptn = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
-	d_output_t0 = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
-	d_output_pt0 = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
-	d_output_tn = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
-	d_output_ptn = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
-	*/
 	d_input_t0 = new float*[numberOfNeuronLayers];
 	d_input_tn = new float*[numberOfNeuronLayers];
 	d_input_pt0 = new float*[numberOfNeuronLayers];
@@ -115,8 +105,7 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 	//Biases
 	d_inputBiases = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
 	d_outputBiases = (float**)malloc(numberOfNeuronLayers * sizeof(float*));
-	//Weights
-	//d_weights = (float**)malloc(numberOfWeightLayers * sizeof(float*));
+
 	d_weights = new float*[numberOfWeightLayers];
 	
 	amountOfRandomNumbers=0;
@@ -212,7 +201,7 @@ void RBM::pushDown(int layer, bool input_t0, bool output_t0, bool useProbabiliti
 
 	//Basic variables
 	
-	int inputs = layerSizes[layer];
+	int inputs = layerSizes[layer]+labelSizes[layer];
 	int outputs = layerSizes[layer+1];
 	int inputBatchSize = inputs * batchSize;
 	int numberOfBlocks = inputBatchSize/blockSize + (inputBatchSize%blockSize == 0?0:1);
@@ -374,6 +363,7 @@ void RBM::updateWeights(){
 	int topRequiredLayer=0;
 
 	// We need to know the top layer with a learning rate
+	// That way we only push the data up as far as it needs to go
 	for( int layer=0 ; layer<numberOfWeightLayers ; layer++ )
 	{
 		if( learningRates[layer]!=0.0 )
@@ -382,21 +372,25 @@ void RBM::updateWeights(){
 		}
 	}
 
+	// Now it's time to actually process the data
 	for( int layer=0 ; layer<=topRequiredLayer; layer++ ){
+		// If no learning rate, no reason to train it
 		if( learningRates[layer]==0 ){
 			pushUp(layer, true, true, true);
 		}
 		else{
+			// Sample and then update weights
 			alternatingGibbsSampling(layer, CDSamples);
 			updateWeightsInLayer(layer);
+			updateBiasesInLayer(layer);
 		}
 	}
 
 };
 
 void RBM::setInputPattern(){
+	// Set the input 
     cublasSetVector(layerSizes[0]*batchSize, sizeof(float), (inputSource->getNextInput(this)), 1, d_input_pt0[0], 1);
-	cudaThreadSynchronize();
 	checkError(cublasGetError());
 };
 
