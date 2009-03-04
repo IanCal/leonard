@@ -21,6 +21,9 @@
 class ParameterController;
 class InputSource;
 
+/** This is a full, multi-layered RBM
+ *
+ */
 class RBM{
 
 	public:

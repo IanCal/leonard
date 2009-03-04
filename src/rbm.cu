@@ -71,10 +71,10 @@ void checkError(cublasStatus status, char *message = NULL){
 
 };
 
-/* 
- * The actual code for the RBM goes in here
+/**
+ * The constructor.
+ * @param numLayers This is the number of layers to create. It is the number of layers of neurons.
  */
-
 RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterController *parameterController, InputSource *inputSource, int batchSize){
 	printf("Creating RBM with \n");
 	CDSamples=1;
@@ -396,8 +396,6 @@ void RBM::setInputPattern(){
 
 void RBM::getReconstruction(int layer, float *output){
 	cublasGetVector(layerSizes[layer]*batchSize, sizeof(float), d_input_ptn[layer], 1, output, 1);
-	//cublasGetVector(layerSizes[layer]*batchSize, sizeof(float), d_weights[layer], 1, output, 1);
-
 };
 
 void RBM::learningIteration(){

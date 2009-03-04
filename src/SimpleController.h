@@ -16,6 +16,12 @@
  */
 #include "include/ParameterController.h"
 
+/**
+ * Constructor for a simple parameter controller.
+ * @param iterationLearningRate The learning rate to be used. 
+ * @param samples The number of samples per epoch.
+ * @param epochs The number of epochs to train each layer for.
+ */
 class SimpleController: public ParameterController{
 	public:
 		float learningRate;

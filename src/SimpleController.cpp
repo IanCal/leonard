@@ -29,6 +29,11 @@ SimpleController::SimpleController(float iterationLearningRate, int samples, int
 	currentSample=0;
 };
 
+/**
+ * This function is called every RBM learning iteration.
+ * @param currentRBM This is a pointer to the RBM
+ */
+
 void SimpleController::updateParameters(RBM *currentRBM){
 	
 	if( currentSample>=samplesPerEpoch*trainingEpochs )
