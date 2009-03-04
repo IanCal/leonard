@@ -380,14 +380,17 @@ void RBM::updateWeights(){
 	// Now it's time to actually process the data
 	for( int layer=0 ; layer<=topRequiredLayer; layer++ ){
 		// If no learning rate, no reason to train it
-		if( learningRates[layer]==0 ){
+		if( learningRates[layer]==0.0 ){
 			pushUp(layer, true, true, true);
 		}
 		else{
 			// Sample and then update weights
 			alternatingGibbsSampling(layer, CDSamples);
 			updateWeightsInLayer(layer);
-			updateBiasesInLayer(layer);
+			if( biasLearningRates[layer]!=0.0 )
+			{
+				updateBiasesInLayer(layer);
+			}
 		}
 	}
 
