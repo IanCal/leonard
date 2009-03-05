@@ -81,10 +81,12 @@ class RBM{
 		 */
 		float **d_input_t0;
 		float **d_input_pt0;
+		float **d_labels_input;
 		// The inputs at time N and probabilities at time N
 		// respectively
 		float **d_input_tn;
 		float **d_input_ptn;
+		float **d_labels_reconstruction;
 		
 		/* 
 		 * Array of outputs from each layer (Most will be equal
@@ -123,6 +125,7 @@ class RBM{
 		void setInputPattern();
 		void setLabels();
 		void getReconstruction(int layer, float *output);
+		void getLabels(int layer, float *output);
 		void learningIteration();
 		void updateBiasesInLayer(int layer);
 		void generateRandomNumbers(float scale);

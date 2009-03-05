@@ -79,7 +79,7 @@ void BasicFileInput::setLabelsFile(char *filename, int fileLength, int labelSize
 	}
 	allLabels = new unsigned char[fileLength];
 	FILE *f=fopen(filename,"r");
-	fread(&allLabels,sizeof(unsigned char),fileLength,f);
+	fread(allLabels,sizeof(unsigned char),fileLength,f);
 	fclose(f);
 };
 
@@ -118,7 +118,8 @@ float** BasicFileInput::getNextLabel(RBM *currentRBM)
 		initialised = true;
 	}
 	int batchSize = currentRBM->batchSize;
-	int labelSize = currentRBM->labelSizes[currentRBM->numberOfNeuronLayers-1];
+	int labelSize = currentRBM->labelSizes[currentRBM->numberOfNeuronLayers-2];
+	int topLayer = currentRBM->numberOfNeuronLayers-2;
 
 	for( int batch=0 ; batch<batchSize ; batch++ )
 	{
@@ -126,11 +127,11 @@ float** BasicFileInput::getNextLabel(RBM *currentRBM)
 		{
 			if( (int)allLabels[currentItem+batch]==i )
 			{
-				labelsColumnMajor[currentRBM->numberOfNeuronLayers-1][batch+(i*batchSize)]=1.0;
+				labelsColumnMajor[topLayer][batch+(i*batchSize)]=1.0;
 			}
 			else
 			{
-				labelsColumnMajor[currentRBM->numberOfNeuronLayers-1][batch+(i*batchSize)]=0.0;
+				labelsColumnMajor[topLayer][batch+(i*batchSize)]=0.0;
 			}
 		}
 	}

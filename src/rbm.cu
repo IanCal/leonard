@@ -104,8 +104,10 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 	// Build up the device arrays
 	d_input_t0 = new float*[numberOfNeuronLayers];
 	d_input_tn = new float*[numberOfNeuronLayers];
+	d_labels_input = new float*[numberOfNeuronLayers];
 	d_input_pt0 = new float*[numberOfNeuronLayers];
 	d_input_ptn = new float*[numberOfNeuronLayers];
+	d_labels_reconstruction = new float*[numberOfNeuronLayers];
 	d_output_t0 = new float*[numberOfNeuronLayers];
 	d_output_tn = new float*[numberOfNeuronLayers];
 	d_output_pt0 = new float*[numberOfNeuronLayers];
@@ -128,6 +130,9 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 		status |= cublasAlloc(layerSizes[layer]+labelSizes[layer], sizeof(float), (void**)&d_inputBiases[layer]);
 		checkError(status);
 		setValue(d_inputBiases[layer],layerSizes[layer]+labelSizes[layer]);
+		// Set the labels
+		d_labels_input[layer] = &d_input_pt0[layer][layerSizes[layer]*batchSize];
+		d_labels_reconstruction[layer] = &d_input_ptn[layer][layerSizes[layer]*batchSize];
 
 		// now the output side of things
 		if( layer>0 )
@@ -163,7 +168,6 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 	generateRandomNumbers(1.0);
 	for( int layer=0 ; layer<numberOfWeightLayers ; layer++ )
 	{
-		printf("Setting layer %d\n",layer);
 			setRandom(d_weights[layer],(layerSizes[layer]+labelSizes[layer])*layerSizes[layer+1],1.0);
 	}
 
@@ -407,21 +411,31 @@ void RBM::setLabels(){
 	float **currentLabels = inputSource->getNextLabel(this);
 	for( int layer=0 ; layer<numberOfNeuronLayers ; layer++ )
 	{
+		/*for( int i=0 ; i<labelSizes[layer] ; i++ )
+		{
+			printf("%f, ",currentLabels[layer][i]);
+		}
+		printf("\n");	
+		*/
 		if( labelSizes[layer]>0 )
 		{
 			//set vector
-    		cublasSetVector(labelSizes[layer]*batchSize, sizeof(float), (inputSource->labelsColumnMajor), 1, d_[0], 1);
+    		cublasSetVector(labelSizes[layer]*batchSize, sizeof(float), currentLabels[layer], 1, d_labels_input[layer], 1);
 		}
 	}
 	
 };
 
+void RBM::getLabels(int layer, float *output){
+	cublasGetVector(labelSizes[layer]*batchSize, sizeof(float), d_labels_reconstruction[layer], 1, output, 1);
+};
 void RBM::getReconstruction(int layer, float *output){
 	cublasGetVector(layerSizes[layer]*batchSize, sizeof(float), d_input_ptn[layer], 1, output, 1);
 };
 
 void RBM::learningIteration(){
 	setInputPattern();
+	setLabels();
 	updateWeights();
 	parameterUpdater->updateParameters(this);
 	generateRandomNumbers(1.0f);

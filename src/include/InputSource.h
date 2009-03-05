@@ -21,6 +21,7 @@ class InputSource{
 	public:
 		InputSource(){};
 		virtual float* getNextInput(RBM *currentRBM){return 0;};
+		virtual float** getNextLabel(RBM *currentRBM){return 0;};
 		virtual void initialise(RBM *currentRBM){};
 };
 #endif

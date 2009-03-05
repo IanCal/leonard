@@ -60,7 +60,6 @@ def configure(conf):
 
 def build(bld):
 	# process subfolders from here
-	print ("Entering into directory " + os.getcwd())
 	bld.add_subdirs('src')
 
 	## installing resources and files - call them under build(bld) or shutdown()
