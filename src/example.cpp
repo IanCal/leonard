@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	int layerSizes[4] = {784,128,128,128};
 	int labelSizes[4] = {0,0,10,0};
 	int fileSize=50000;
-	int epochs=1;
+	int epochs=10;
 	SimpleController* basicController = new SimpleController(0.005,fileSize,epochs);
 	BasicFileInput*   basicInput = new BasicFileInput(argv[1],argv[2],fileSize);
 	RBM *a = new RBM(layers,layerSizes,labelSizes,basicController,basicInput,32);
@@ -96,13 +96,15 @@ printf("Took %f, running at a rate of %f/s\n",timetaken,float(fileSize*epochs)/t
 	BITMAP *buffer;
 
 	float *current = new float[784*32];
+	float *original = new float[784*32];
 	float *labels = new float[10*32];
 	a->setInputPattern();
 	a->setLabels();
 	a->pushUp(0, true, true, true);
 	a->pushDown(0, false, true, true);
-	a->getReconstruction(0,current);
-	a->getLabels(2,labels);
+	a->getInput(0,current, true);
+	a->getInput(0,original, false);
+	a->getLabels(2,labels, true);
 	printf("#labels %d\n",a->labelSizes[2]);
 	buffer = create_bitmap(SCREEN_W, SCREEN_H);
 	set_palette(desktop_palette);
@@ -119,8 +121,9 @@ printf("Took %f, running at a rate of %f/s\n",timetaken,float(fileSize*epochs)/t
 			a->pushDown(1, false, true, true);
 			a->pushDown(0, false, false, true);
 			
-			a->getReconstruction(0,current);
-			a->getLabels(2,labels);
+			a->getInput(0,current,true);
+			a->getInput(0,original,false);
+			a->getLabels(2,labels, true);
 			rest(10);
 		}
 		else{
@@ -130,7 +133,8 @@ printf("Took %f, running at a rate of %f/s\n",timetaken,float(fileSize*epochs)/t
 		{
 			for( int y=0 ; y<4 ; y++ )
 			{
-				drawImage(buffer,10+150*x,10+150*y,4,28,28,current,32,x+y*8,1,15);	
+				drawImage(buffer,5+150*x,10+150*y,2,28,28,original,32,x+y*8,0,15);	
+				drawImage(buffer,60+150*x,10+150*y,3,28,28,current,32,x+y*8,0,15);	
 				drawImage(buffer,10+150*x,130+150*y,8,10,1,labels,32,x+y*8,1,255);	
 			}
 			

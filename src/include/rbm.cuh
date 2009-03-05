@@ -124,8 +124,8 @@ class RBM{
 		void updateWeights();
 		void setInputPattern();
 		void setLabels();
-		void getReconstruction(int layer, float *output);
-		void getLabels(int layer, float *output);
+		void getInput(int layer, float *output, bool reconstruction);
+		void getLabels(int layer, float *output, bool reconstruction);
 		void learningIteration();
 		void updateBiasesInLayer(int layer);
 		void generateRandomNumbers(float scale);

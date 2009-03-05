@@ -426,11 +426,17 @@ void RBM::setLabels(){
 	
 };
 
-void RBM::getLabels(int layer, float *output){
-	cublasGetVector(labelSizes[layer]*batchSize, sizeof(float), d_labels_reconstruction[layer], 1, output, 1);
+void RBM::getLabels(int layer, float *output, bool reconstruction){
+	if (reconstruction)
+		cublasGetVector(labelSizes[layer]*batchSize, sizeof(float), d_labels_reconstruction[layer], 1, output, 1);
+	else
+		cublasGetVector(labelSizes[layer]*batchSize, sizeof(float), d_labels_input[layer], 1, output, 1);
 };
-void RBM::getReconstruction(int layer, float *output){
-	cublasGetVector(layerSizes[layer]*batchSize, sizeof(float), d_input_ptn[layer], 1, output, 1);
+void RBM::getInput(int layer, float *output, bool reconstruction){
+	if (reconstruction)
+		cublasGetVector(layerSizes[layer]*batchSize, sizeof(float), d_input_ptn[layer], 1, output, 1);
+	else
+		cublasGetVector(layerSizes[layer]*batchSize, sizeof(float), d_input_pt0[layer], 1, output, 1);
 };
 
 void RBM::learningIteration(){
