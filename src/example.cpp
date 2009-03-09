@@ -26,6 +26,7 @@
 
 #include "SimpleController.h"
 #include "BasicFileInput.h"
+#include "TestingHarness.h"
 #include <allegro.h>
 void drawImage(BITMAP *buffer, int xPos, int yPos, int scale, int width, int height, float *data, 
 		int batchSize=1, int displayNumber=0, int spacing=0, int backgroundColour=0){
@@ -52,13 +53,18 @@ void drawImage(BITMAP *buffer, int xPos, int yPos, int scale, int width, int hei
 int main(int argc, char *argv[])
 {
 	int layers=4;
-	int layerSizes[4] = {784,128,128,128};
-	int labelSizes[4] = {0,0,10,0};
-	int fileSize=50000;
-	int epochs=10;
-	SimpleController* basicController = new SimpleController(0.005,fileSize,epochs);
-	BasicFileInput*   basicInput = new BasicFileInput(argv[1],argv[2],fileSize);
+	int layerSizes[4] = {784,512,512,2048};
+	int labelSizes[4] = {10,0,0,0};
+	int testingSize=8000;
+	int fileSize=57000;
+	int epochs=1;
+	SimpleController* basicController = new SimpleController(0.01,fileSize-testingSize,epochs);
+	BasicFileInput*   basicInput = new BasicFileInput(argv[1],argv[2],fileSize-testingSize);
+	BasicFileInput*   basicInputTest = new BasicFileInput(argv[1],argv[2],fileSize);
 	RBM *a = new RBM(layers,layerSizes,labelSizes,basicController,basicInput,32);
+	basicInputTest->initialise(a);
+	//basicInputTest->currentItem=fileSize-testingSize;
+	TestingHarness*   testHarness = new TestingHarness(basicInput);
 	
 	printf("Created RBM\n");
 	printf("Trying to train\n");
@@ -66,13 +72,14 @@ int main(int argc, char *argv[])
 	
 time_t start, end;
 time(&start);
-	for( int i=0 ; i<epochs*layers*(fileSize/32) ; i++ )
+	for( int i=0 ; i<epochs*layers*((fileSize-testingSize)/32) ; i++ )
 	{
 		a->learningIteration();
 	}
 time(&end);
 float timetaken=difftime(end,start);
 printf("Took %f, running at a rate of %f/s\n",timetaken,float(fileSize*epochs)/timetaken);
+printf("MSE %f%\n",100.*testHarness->test(a,testingSize));
 	printf("rain\n");
 	// testing of reading
 	// Start allegro	
@@ -96,14 +103,16 @@ printf("Took %f, running at a rate of %f/s\n",timetaken,float(fileSize*epochs)/t
 	BITMAP *buffer;
 
 	float *current = new float[784*32];
+	float *layer1 = new float[512*32];
+	float *layer2 = new float[512*32];
+	float *layer3 = new float[2048*32];
+	float *layer1rec = new float[512*32];
+	float *layer2rec = new float[512*32];
+	float *layer3rec = new float[2048*32];
 	float *original = new float[784*32];
 	float *labels = new float[10*32];
-	a->setInputPattern();
-	a->setLabels();
-	a->pushUp(0, true, true, true);
-	a->pushDown(0, false, true, true);
-	a->getInput(0,current, true);
-	a->getInput(0,original, false);
+	float *labelsrec  = new float[10*32];
+	a->classify();
 	a->getLabels(2,labels, true);
 	printf("#labels %d\n",a->labelSizes[2]);
 	buffer = create_bitmap(SCREEN_W, SCREEN_H);
@@ -111,24 +120,40 @@ printf("Took %f, running at a rate of %f/s\n",timetaken,float(fileSize*epochs)/t
 	//Drawing loop
 	while (!key[KEY_ESC]){
 		if (key[KEY_DOWN]){
-			//a->learningIteration();
-		    a->setInputPattern();
-		    a->setLabels();
-			a->pushUp(0, true, true, true);
-			a->pushUp(1, true, true, true);
-			a->pushUp(2, true, true, true);
-			a->pushDown(2, false, true, true);
-			a->pushDown(1, false, true, true);
-			a->pushDown(0, false, false, true);
-			
+			a->classify();
+			a->pushDown(2,false,true,true);
+			a->pushDown(1,false,false,true);
+			a->pushDown(0,false,false,true);
+
 			a->getInput(0,current,true);
 			a->getInput(0,original,false);
-			a->getLabels(2,labels, true);
+			a->getInput(1,layer1,false);
+			a->getInput(2,layer2,false);
+			a->getInput(3,layer3,false);
+			a->getInput(1,layer1rec,true);
+			a->getInput(2,layer2rec,true);
+			a->getInput(3,layer3rec,true);
+			a->getLabels(0,labels, false);
+			a->getLabels(0,labelsrec, true);
 			rest(10);
 		}
 		else{
 			rest(10);
 		}
+		/*
+		drawImage(buffer,20,10,2,64,32,layer3,32,0,0,15);	
+		drawImage(buffer,20,100,2,16,32,layer2,32,0,0,15);	
+		drawImage(buffer,20,200,2,16,32,layer1,32,0,0,15);	
+		drawImage(buffer,20,300,2,28,28,original,32,0,0,15);	
+		drawImage(buffer,120,100,4,1,10,labels,32,0,1,255);	
+		
+		drawImage(buffer,200,10,2,64,32,layer3rec,32,0,0,15);	
+		drawImage(buffer,200,100,2,16,32,layer2rec,32,0,0,15);	
+		drawImage(buffer,200,200,2,16,32,layer1rec,32,0,0,15);	
+		drawImage(buffer,200,300,2,28,28,current,32,0,0,15);	
+		drawImage(buffer,320,100,4,1,10,labelsrec,32,0,1,255);	
+		*/
+		
 		for( int x=0 ; x<8 ; x++ )
 		{
 			for( int y=0 ; y<4 ; y++ )
@@ -136,6 +161,7 @@ printf("Took %f, running at a rate of %f/s\n",timetaken,float(fileSize*epochs)/t
 				drawImage(buffer,5+150*x,10+150*y,2,28,28,original,32,x+y*8,0,15);	
 				drawImage(buffer,60+150*x,10+150*y,3,28,28,current,32,x+y*8,0,15);	
 				drawImage(buffer,10+150*x,130+150*y,8,10,1,labels,32,x+y*8,1,255);	
+				drawImage(buffer,10+150*x,140+150*y,8,10,1,labelsrec,32,x+y*8,1,255);	
 			}
 			
 		}

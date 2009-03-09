@@ -14,15 +14,15 @@
  *   You should have received a copy of the GNU General Public License
  *   along with Leonard.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef INPUTSOURCE
-#define INPUTSOURCE
-#include "rbm.cuh"
-class InputSource{
+#include "include/InputSource.h"
+#include "include/rbm.cuh"
+
+class TestingHarness{
 	public:
-		int maxLabels;
-		InputSource(){};
-		virtual float* getNextInput(RBM *currentRBM){return 0;};
-		virtual float** getNextLabel(RBM *currentRBM){return 0;};
-		virtual void initialise(RBM *currentRBM){maxLabels=0;};
+		InputSource *testingInput;
+
+		TestingHarness(InputSource *testInput);
+		float test(RBM *RBMToTest, int iterations);
+
 };
-#endif
+

@@ -83,6 +83,11 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 	numberOfNeuronLayers=numLayers;
 	layerSizes=sizeOfLayers;
 	labelSizes=sizeOfLabels;
+	for( int i=0 ; i<numberOfNeuronLayers ; i++ )
+	{
+		printf("%d = labelsize for %d\n",labelSizes[i],i);
+	}
+	
 	learningRates = new float[numLayers]; 
 	momentum = new float[numLayers];
 	biasLearningRates = new float[numLayers];
@@ -259,11 +264,15 @@ void RBM::pushDown(int layer, bool input_t0, bool output_t0, bool useProbabiliti
 
 };
 
-void RBM::pushUp(int layer, bool input_t0, bool output_t0, bool useProbabilities){
+void RBM::pushUp(int layer, bool input_t0, bool output_t0, bool useProbabilities, bool useLabels){
 
 	//Basic variables
 	
-	int inputs = layerSizes[layer]+labelSizes[layer];
+	int inputs;
+	if (useLabels)
+		inputs = layerSizes[layer]+labelSizes[layer];
+	else	
+		inputs = layerSizes[layer];
 	int outputs = layerSizes[layer+1];
 	int outputBatchSize = outputs * batchSize;
 	int numberOfBlocks = outputBatchSize/blockSize + (outputBatchSize%blockSize == 0?0:1);
@@ -313,20 +322,20 @@ void RBM::pushUp(int layer, bool input_t0, bool output_t0, bool useProbabilities
 
 };
 
-void RBM::alternatingGibbsSampling(int layer, int iterations, bool probabilisticInput, bool probabilisticOutput, bool startAtTop){
+void RBM::alternatingGibbsSampling(int layer, int iterations, bool probabilisticInput, bool probabilisticOutput, bool startAtTop, bool useLabels){
 
 	// Push up the initial pattern, then down to the inputs
 	if (!startAtTop)
-		pushUp(layer, true, true, true);
+		pushUp(layer, true, true, true, useLabels);
 	pushDown(layer, false, true, probabilisticOutput);
 	//Cycle doing this
 	for( int i=0 ; i<iterations-1 ; i++ )
 	{
-		pushUp(layer, false, false, probabilisticInput);
+		pushUp(layer, false, false, probabilisticInput, useLabels);
 		pushDown(layer, false, false, probabilisticOutput);
 	}
 	//Final push up.	
-	pushUp(layer, false, false, probabilisticInput);
+	pushUp(layer, false, false, probabilisticInput, useLabels);
 	
 };
 
@@ -369,7 +378,7 @@ void RBM::updateWeightsInLayer(int layer){
 
 void RBM::updateWeights(){
 
-	int topRequiredLayer=0;
+	int topRequiredLayer=-1;
 
 	// We need to know the top layer with a learning rate
 	// That way we only push the data up as far as it needs to go
@@ -380,6 +389,8 @@ void RBM::updateWeights(){
 			topRequiredLayer=layer;
 		}
 	}
+	if (topRequiredLayer<0)
+		return;
 
 	// Now it's time to actually process the data
 	for( int layer=0 ; layer<=topRequiredLayer; layer++ ){
@@ -389,11 +400,11 @@ void RBM::updateWeights(){
 		}
 		else{
 			// Sample and then update weights
-			alternatingGibbsSampling(layer, CDSamples);
+			alternatingGibbsSampling(layer, CDSamples, true, true, false, true);
 			updateWeightsInLayer(layer);
 			if( biasLearningRates[layer]!=0.0 )
 			{
-				updateBiasesInLayer(layer);
+				//updateBiasesInLayer(layer);
 			}
 		}
 	}
@@ -426,17 +437,35 @@ void RBM::setLabels(){
 	
 };
 
+void RBM::classify(){
+
+	setInputPattern();
+	setLabels();
+
+	for( int layer=0 ; layer<numberOfWeightLayers; layer++ ){
+		if( labelSizes[layer]==0.0 ){
+			pushUp(layer, true, true, true, false);
+		}
+		else{
+			//Now we can push the data up and down, however many times is desired
+			alternatingGibbsSampling(layer, CDSamples, true, true, false, false);
+		}
+	}
+};
+
 void RBM::getLabels(int layer, float *output, bool reconstruction){
 	if (reconstruction)
 		cublasGetVector(labelSizes[layer]*batchSize, sizeof(float), d_labels_reconstruction[layer], 1, output, 1);
 	else
 		cublasGetVector(labelSizes[layer]*batchSize, sizeof(float), d_labels_input[layer], 1, output, 1);
+	checkError(cublasGetError());
 };
 void RBM::getInput(int layer, float *output, bool reconstruction){
 	if (reconstruction)
 		cublasGetVector(layerSizes[layer]*batchSize, sizeof(float), d_input_ptn[layer], 1, output, 1);
 	else
 		cublasGetVector(layerSizes[layer]*batchSize, sizeof(float), d_input_pt0[layer], 1, output, 1);
+	checkError(cublasGetError());
 };
 
 void RBM::learningIteration(){

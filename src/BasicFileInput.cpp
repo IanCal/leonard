@@ -67,6 +67,7 @@ void BasicFileInput::setImagesFile(char *filename, int length, int itemSize, int
 
 void BasicFileInput::setLabelsFile(char *filename, int fileLength, int labelSize, int layers, int batchSize)
 {
+	maxLabels=labelSize;
 	labelsColumnMajor = new float*[layers];
 	for( int i=0 ; i<layers ; i++ )
 	{
@@ -91,7 +92,7 @@ float* BasicFileInput::getNextInput(RBM *currentRBM)
 		initialised = true;
 	}
 	int batchSize = currentRBM->batchSize;
-	int inputSize = currentRBM->layerSizes[0] - currentRBM->labelSizes[0];
+	int inputSize = currentRBM->layerSizes[0];
 	int currentPosition = currentItem*inputSize;
 	for( int batch=0 ; batch<batchSize ; batch++ )
 	{
@@ -118,8 +119,16 @@ float** BasicFileInput::getNextLabel(RBM *currentRBM)
 		initialised = true;
 	}
 	int batchSize = currentRBM->batchSize;
-	int labelSize = currentRBM->labelSizes[currentRBM->numberOfNeuronLayers-2];
-	int topLayer = currentRBM->numberOfNeuronLayers-2;
+	int labelSize;
+	int topLayer;
+	for( int i=0 ; i<currentRBM->numberOfNeuronLayers ; i++ )
+	{
+		if (currentRBM->labelSizes[i]>0){
+			labelSize = currentRBM->labelSizes[i];
+			topLayer = i;
+		}
+	}
+	
 
 	for( int batch=0 ; batch<batchSize ; batch++ )
 	{
@@ -155,9 +164,12 @@ void BasicFileInput::initialise(RBM *currentRBM)
 	iteratedOverLabels=false;
 	
 	int batchSize = currentRBM->batchSize;
-	int inputSize = currentRBM->layerSizes[0] - currentRBM->labelSizes[0];
+	int inputSize = currentRBM->layerSizes[0];
 	int layers = currentRBM->numberOfNeuronLayers;
-	int labelSize = currentRBM->labelSizes[currentRBM->numberOfNeuronLayers-1];
+	int labelSize=0;
+	for( int i=0 ; i<currentRBM->numberOfNeuronLayers ; i++ )
+		if (currentRBM->labelSizes[i]>0)
+			labelSize = currentRBM->labelSizes[i];
 
 	setImagesFile(imagesFileName, totalItems, inputSize, batchSize);
 	setLabelsFile(labelsFileName, totalItems, labelSize, layers, batchSize);

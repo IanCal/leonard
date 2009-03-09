@@ -39,7 +39,6 @@ void SimpleController::updateParameters(RBM *currentRBM){
 	if( currentSample>=samplesPerEpoch*trainingEpochs )
 	{
 		layerToTrain++;
-		printf("Currently training layer %d\n",layerToTrain);
 		if( layerToTrain>=currentRBM->numberOfWeightLayers )
 		{
 			learningRate=0;
@@ -47,8 +46,13 @@ void SimpleController::updateParameters(RBM *currentRBM){
 		for( int layer=0 ; layer<currentRBM->numberOfWeightLayers ; layer++ )
 		{
 			currentRBM->learningRates[layer]=0.;	
+			currentRBM->biasLearningRates[layer]=0.;
 		}
-		currentRBM->learningRates[layerToTrain]=learningRate;
+		if (layerToTrain<currentRBM->numberOfWeightLayers){
+			printf("Currently training layer %d\n",layerToTrain);
+			currentRBM->learningRates[layerToTrain]=learningRate;
+			currentRBM->biasLearningRates[layerToTrain]=learningRate*0.05;
+		}
 		currentSample=0;
 	}
 	currentSample+=currentRBM->batchSize;

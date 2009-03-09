@@ -41,6 +41,7 @@ def configure(conf):
 	conf.sub_config('src')
 
 	conf.env['CXXFLAGS_MYPROG']='-O3'
+	conf.env['CXXFLAGS'] = '-g'
 	conf.env['LIBPATH_LEONARD']=Options.options.leonard_library
 	conf.env['LIB_LEONARD']='leonard'
 	conf.env['SOME_INSTALL_DIR']='/tmp/ahoy/lib/'
@@ -56,7 +57,7 @@ def configure(conf):
 	env.set_variant('debug')
 	conf.set_env_name('debug', env)
 	conf.setenv('debug')
-	conf.env['CXXFLAGS'] = '-D_REENTRANT -DDBG_ENABLED -Wall -O0 -ggdb3 -ftemplate-depth-128'
+	conf.env['CXXFLAGS'] = '-D_REENTRANT -DDBG_ENABLED -Wall -O0 -g -ggdb3 -ftemplate-depth-128'
 
 def build(bld):
 	# process subfolders from here

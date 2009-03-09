@@ -116,8 +116,8 @@ class RBM{
 
 		// Function Declarations
 
-		void alternatingGibbsSampling(int layer, int iterations, bool probabilisticInput=false, bool probabilisticOutput=false, bool startAtTop=false);
-		void pushUp(int layer, bool input_t0, bool output_t0, bool useProbabilities);
+		void alternatingGibbsSampling(int layer, int iterations, bool probabilisticInput=false, bool probabilisticOutput=false, bool startAtTop=false, bool useLabels=true);
+		void pushUp(int layer, bool input_t0, bool output_t0, bool useProbabilities, bool useLabels=true);
 		void pushDown (int layer, bool input_t0, bool output_t0, bool useProbabilities);
 
 		void updateWeightsInLayer(int layer);
@@ -131,6 +131,7 @@ class RBM{
 		void generateRandomNumbers(float scale);
 		void setValue(float *device_array, int size, float value=0.f);
 		void setRandom(float *device_array, int size, float scale);
+		void classify();
 };	
 #endif
 
