@@ -173,7 +173,7 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 	generateRandomNumbers(1.0);
 	for( int layer=0 ; layer<numberOfWeightLayers ; layer++ )
 	{
-			setRandom(d_weights[layer],(layerSizes[layer]+labelSizes[layer])*layerSizes[layer+1],1.0);
+			setRandom(d_weights[layer],(layerSizes[layer]+labelSizes[layer])*layerSizes[layer+1],0.2);
 	}
 
 };
@@ -261,6 +261,7 @@ void RBM::pushDown(int layer, bool input_t0, bool output_t0, bool useProbabiliti
 	//cutoff kernel
 	cutoff<<<numberOfBlocks,blockSize>>>(d_input_p, d_input, d_randomNumbers, inputBatchSize);
 	checkError(cublasGetError());
+	generateRandomNumbers(1.0f);
 
 };
 
@@ -312,13 +313,14 @@ void RBM::pushUp(int layer, bool input_t0, bool output_t0, bool useProbabilities
 	
 	//probabilities kernel
 	probabilities<<<numberOfBlocks,blockSize>>>(d_output_p, d_outputBiases[layer], outputBatchSize);
-	cudaThreadSynchronize();
 	checkError(cublasGetError());
+	cudaThreadSynchronize();
 	
 	//cutoff kernel
 	cutoff<<<numberOfBlocks,blockSize>>>(d_output_p, d_output, d_randomNumbers, outputBatchSize);
-	cudaThreadSynchronize();
 	checkError(cublasGetError());
+	cudaThreadSynchronize();
+	generateRandomNumbers(1.0f);
 
 };
 
@@ -350,11 +352,15 @@ void RBM::updateBiasesInLayer(int layer){
 
 	// Update the input biases
 	biasesIncrease<<<nBlocksForInBiases,blockSize>>>(d_input_pt0[layer], d_inputBiases[layer], biasLearningRates[layer], inputBatchSize/batchSize, batchSize);
+	checkError(cublasGetError());
 	biasesDecrease<<<nBlocksForInBiases,blockSize>>>(d_input_ptn[layer], d_inputBiases[layer], biasLearningRates[layer], inputBatchSize/batchSize, batchSize, 0.0);
+	checkError(cublasGetError());
 
 	// Update the output biases
 	biasesIncrease<<<nBlocksForOutBiases,blockSize>>>(d_output_pt0[layer], d_outputBiases[layer], biasLearningRates[layer], outputBatchSize/batchSize, batchSize);
+	checkError(cublasGetError());
 	biasesDecrease<<<nBlocksForOutBiases,blockSize>>>(d_output_ptn[layer], d_outputBiases[layer], biasLearningRates[layer], outputBatchSize/batchSize, batchSize, 0.0);
+	checkError(cublasGetError());
 
 };
 
@@ -371,7 +377,8 @@ void RBM::updateWeightsInLayer(int layer){
 	cublasSgemm('T','n',outputs,inputs,batchSize,
 			-learningRates[layer],d_output_ptn[layer],batchSize,
 			d_input_ptn[layer],batchSize,
-			weightDecay[layer],d_weights[layer],outputs);
+			//weightDecay[layer],d_weights[layer],outputs);
+			1.f,d_weights[layer],outputs);
 	checkError(cublasGetError());
 
 };
@@ -400,11 +407,11 @@ void RBM::updateWeights(){
 		}
 		else{
 			// Sample and then update weights
-			alternatingGibbsSampling(layer, CDSamples, true, true, false, true);
+			alternatingGibbsSampling(layer, CDSamples, true, false, false, true);
 			updateWeightsInLayer(layer);
 			if( biasLearningRates[layer]!=0.0 )
 			{
-				//updateBiasesInLayer(layer);
+				updateBiasesInLayer(layer);
 			}
 		}
 	}
@@ -418,20 +425,13 @@ void RBM::setInputPattern(){
 };
 
 void RBM::setLabels(){
-    //cublasSetVector(layerSizes[0]*batchSize, sizeof(float), (inputSource->getNextInput(this)), 1, d_input_pt0[0], 1);
 	float **currentLabels = inputSource->getNextLabel(this);
 	for( int layer=0 ; layer<numberOfNeuronLayers ; layer++ )
 	{
-		/*for( int i=0 ; i<labelSizes[layer] ; i++ )
-		{
-			printf("%f, ",currentLabels[layer][i]);
-		}
-		printf("\n");	
-		*/
 		if( labelSizes[layer]>0 )
 		{
-			//set vector
     		cublasSetVector(labelSizes[layer]*batchSize, sizeof(float), currentLabels[layer], 1, d_labels_input[layer], 1);
+			checkError(cublasGetError());
 		}
 	}
 	

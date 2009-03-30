@@ -42,16 +42,11 @@ float TestingHarness::test(RBM *RBMToTest, int iterations){
 		RBMToTest->classify();
 		for( int layer=0 ; layer<RBMToTest->numberOfNeuronLayers ; layer++ )
 		{
-			printf("testing %d\n",layer);
 			if( RBMToTest->labelSizes[layer]!=0 )
 			{
 				//get initial and reconstruction
-				//RBMToTest->getLabels(layer,initial,false);
-					printf("Size = %d\n",(RBMToTest->labelSizes[layer]));
-			//	RBMToTest->getLabels(layer,reconstruction,true);
-					printf("Size = %d\n",(RBMToTest->labelSizes[layer]));
-				printf("Wtf?\n");
-					printf("Size = %d\n",(RBMToTest->labelSizes[layer]));
+				RBMToTest->getLabels(layer,initial,false);
+				RBMToTest->getLabels(layer,reconstruction,true);
 				// Look at individual classifications
 				for( int batch=0 ; batch<batchSize ; batch++ )
 				{	
@@ -59,10 +54,11 @@ float TestingHarness::test(RBM *RBMToTest, int iterations){
 					maxItem=0;
 					actual=0;
 					bestv=0;
-					printf("Size = %d\n",(RBMToTest->labelSizes[layer]));
 					for( int pos=0 ; pos<(RBMToTest->labelSizes[layer]) ; pos++ )
 					{
 						location=batch+(pos*batchSize);
+						if (i<2)
+							printf("(%2.4f.%2.4f), ",initial[location],reconstruction[location]);
 						if (initial[location]>0.0)
 							actual=pos;
 						if (reconstruction[location]>maxValue)
@@ -74,12 +70,15 @@ float TestingHarness::test(RBM *RBMToTest, int iterations){
 					}
 					if (initial[maxItem]<0.5f){
 						errorProportion+=1.;
-						//printf("%d .. %d - %d XXX\n", batch+(i*batchSize), actual, bestv); 
+						if (i<2)
+							printf("\n%d .. %d - %d XXX\n", batch+(i*batchSize), actual, bestv); 
 					}
 					else{
-						//printf("%d .. %d - %d\n", batch+(i*batchSize), actual, bestv); 
+						if (i<2)
+							printf("\n%d .. %d - %d\n", batch+(i*batchSize), actual, bestv); 
 					}
 				}
+				//printf("\n");
 				// Look at the MSE	
 				for( int pos=0 ; pos<RBMToTest->labelSizes[layer] * batchSize; pos++ )
 				{

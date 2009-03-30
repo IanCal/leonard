@@ -54,17 +54,17 @@ int main(int argc, char *argv[])
 {
 	int layers=4;
 	int layerSizes[4] = {784,512,512,2048};
-	int labelSizes[4] = {10,0,0,0};
+	int labelSizes[4] = {0,0,10,0};
 	int testingSize=8000;
-	int fileSize=57000;
-	int epochs=1;
+	int fileSize=atoi(argv[4]);
+	int epochs=atoi(argv[3]);
 	SimpleController* basicController = new SimpleController(0.01,fileSize-testingSize,epochs);
 	BasicFileInput*   basicInput = new BasicFileInput(argv[1],argv[2],fileSize-testingSize);
 	BasicFileInput*   basicInputTest = new BasicFileInput(argv[1],argv[2],fileSize);
 	RBM *a = new RBM(layers,layerSizes,labelSizes,basicController,basicInput,32);
 	basicInputTest->initialise(a);
-	//basicInputTest->currentItem=fileSize-testingSize;
-	TestingHarness*   testHarness = new TestingHarness(basicInput);
+	basicInputTest->currentItem=fileSize-testingSize;
+	TestingHarness*   testHarness = new TestingHarness(basicInputTest);
 	
 	printf("Created RBM\n");
 	printf("Trying to train\n");
@@ -133,14 +133,14 @@ printf("MSE %f%\n",100.*testHarness->test(a,testingSize));
 			a->getInput(1,layer1rec,true);
 			a->getInput(2,layer2rec,true);
 			a->getInput(3,layer3rec,true);
-			a->getLabels(0,labels, false);
-			a->getLabels(0,labelsrec, true);
+			a->getLabels(2,labels, false);
+			a->getLabels(2,labelsrec, true);
 			rest(10);
 		}
 		else{
 			rest(10);
 		}
-		/*
+		
 		drawImage(buffer,20,10,2,64,32,layer3,32,0,0,15);	
 		drawImage(buffer,20,100,2,16,32,layer2,32,0,0,15);	
 		drawImage(buffer,20,200,2,16,32,layer1,32,0,0,15);	
@@ -152,8 +152,8 @@ printf("MSE %f%\n",100.*testHarness->test(a,testingSize));
 		drawImage(buffer,200,200,2,16,32,layer1rec,32,0,0,15);	
 		drawImage(buffer,200,300,2,28,28,current,32,0,0,15);	
 		drawImage(buffer,320,100,4,1,10,labelsrec,32,0,1,255);	
-		*/
 		
+	/*	
 		for( int x=0 ; x<8 ; x++ )
 		{
 			for( int y=0 ; y<4 ; y++ )
@@ -165,7 +165,7 @@ printf("MSE %f%\n",100.*testHarness->test(a,testingSize));
 			}
 			
 		}
-		
+		*/
 		blit(buffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
 	}	
 	return 0;

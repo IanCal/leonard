@@ -48,13 +48,25 @@ void SimpleController::updateParameters(RBM *currentRBM){
 			currentRBM->learningRates[layer]=0.;	
 			currentRBM->biasLearningRates[layer]=0.;
 		}
-		if (layerToTrain<currentRBM->numberOfWeightLayers){
-			printf("Currently training layer %d\n",layerToTrain);
+		if (layerToTrain<currentRBM->numberOfWeightLayers)
+		{
+			printf("Currently training layer %d with learning rate %f\n",layerToTrain, learningRate);
 			currentRBM->learningRates[layerToTrain]=learningRate;
 			currentRBM->biasLearningRates[layerToTrain]=learningRate*0.05;
 		}
+		else 
+		{
+			printf("Overshoot\n");
+		};
 		currentSample=0;
 	}
+	/*
+	if (currentSample<=samplesPerEpoch*3)
+		currentRBM->learningRates[0]=0.0;
+	else{
+		currentRBM->learningRates[0]=learningRate;
+	}
+	*/
 	currentSample+=currentRBM->batchSize;
 	
 };
