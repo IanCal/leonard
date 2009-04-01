@@ -15,6 +15,7 @@
  *   along with Leonard.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "TestingHarness.h"
+#include "include/InputSource.h"
 #include <math.h>
 #include <stdio.h>
 
@@ -35,6 +36,8 @@ float TestingHarness::test(RBM *RBMToTest, int iterations){
 	float initial[batchSize * testingInput->maxLabels];
 	float reconstruction[batchSize * testingInput->maxLabels];
 
+	// Make sure we leave it as we found it!
+	InputSource *previousInputSource = RBMToTest->inputSource;
 	RBMToTest->inputSource = testingInput;
 
 	for( int i=0 ; i<iterations ; i++ )
@@ -57,8 +60,8 @@ float TestingHarness::test(RBM *RBMToTest, int iterations){
 					for( int pos=0 ; pos<(RBMToTest->labelSizes[layer]) ; pos++ )
 					{
 						location=batch+(pos*batchSize);
-						if (i<2)
-							printf("(%2.4f.%2.4f), ",initial[location],reconstruction[location]);
+						//if (i<2)
+						//	printf("(%2.4f.%2.4f), ",initial[location],reconstruction[location]);
 						if (initial[location]>0.0)
 							actual=pos;
 						if (reconstruction[location]>maxValue)
@@ -70,12 +73,12 @@ float TestingHarness::test(RBM *RBMToTest, int iterations){
 					}
 					if (initial[maxItem]<0.5f){
 						errorProportion+=1.;
-						if (i<2)
-							printf("\n%d .. %d - %d XXX\n", batch+(i*batchSize), actual, bestv); 
+						//if (i<2)
+						//	printf("\n%d .. %d - %d XXX\n", batch+(i*batchSize), actual, bestv); 
 					}
 					else{
-						if (i<2)
-							printf("\n%d .. %d - %d\n", batch+(i*batchSize), actual, bestv); 
+						//if (i<2)
+						//	printf("\n%d .. %d - %d\n", batch+(i*batchSize), actual, bestv); 
 					}
 				}
 				//printf("\n");
@@ -90,5 +93,7 @@ float TestingHarness::test(RBM *RBMToTest, int iterations){
 	printf("Total errors: %f\n",errorProportion);
 	mse /= batchSize*iterations;
 	errorProportion /= batchSize*iterations;
+	// Make sure we leave it as we found it!
+	RBMToTest->inputSource = previousInputSource;
 	return errorProportion;
 };

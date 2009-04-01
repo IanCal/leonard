@@ -53,6 +53,7 @@ void SimpleController::updateParameters(RBM *currentRBM){
 			printf("Currently training layer %d with learning rate %f\n",layerToTrain, learningRate);
 			currentRBM->learningRates[layerToTrain]=learningRate;
 			currentRBM->biasLearningRates[layerToTrain]=learningRate*0.05;
+			currentRBM->weightDecay[layerToTrain]=0.999;
 		}
 		else 
 		{
@@ -78,4 +79,5 @@ void SimpleController::initialise(RBM *currentRBM){
 		currentRBM->momentum[layer]=0.;	
 	}
 	currentRBM->learningRates[0]=learningRate;
+	currentRBM->weightDecay[0]=0.999;
 };

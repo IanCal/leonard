@@ -377,8 +377,8 @@ void RBM::updateWeightsInLayer(int layer){
 	cublasSgemm('T','n',outputs,inputs,batchSize,
 			-learningRates[layer],d_output_ptn[layer],batchSize,
 			d_input_ptn[layer],batchSize,
-			//weightDecay[layer],d_weights[layer],outputs);
-			1.f,d_weights[layer],outputs);
+			weightDecay[layer],d_weights[layer],outputs);
+			//1.f,d_weights[layer],outputs);
 	checkError(cublasGetError());
 
 };
@@ -473,5 +473,5 @@ void RBM::learningIteration(){
 	setLabels();
 	updateWeights();
 	parameterUpdater->updateParameters(this);
-	generateRandomNumbers(1.0f);
+	//generateRandomNumbers(1.0f);
 };
