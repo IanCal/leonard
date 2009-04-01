@@ -69,8 +69,11 @@ class RBM{
 		 */ 
 		float *scratch;
 		float *d_randomNumbers;
+		unsigned int *d_randomNumberSeeds0;
+		unsigned int *d_randomNumberSeeds1;
 		int amountOfRandomNumbers;
-		struct Rand48 *rng;
+		unsigned int seedm0;
+		unsigned int seedm1;
 
 		// Device pointers
 		

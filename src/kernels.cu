@@ -78,11 +78,15 @@ __global__ void biasesDecrease(float* in, float* out, float learningRate, int ma
 		}	
 };
 
-__global__ void cutoff( float* neurons_in, float* neurons_out, float* random, int maxLength){
+__global__ void cutoff( float* neurons_in, float* neurons_out, unsigned int* seed_m0, unsigned int* seed_m1, int maxLength){
     
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	float random; 
+	seed_m0[idx] = 18000u * (seed_m0[idx] & 0xFFFFu) + (seed_m0[idx] >> 16);
+	seed_m1[idx] = 30903u * (seed_m1[idx] & 0xFFFFu) + (seed_m1[idx] >> 16);
+	random = static_cast<float>((seed_m0[idx] << 16) + (seed_m1[idx] & 0xFFFFu)) / 4294967296.0f;
 	if (idx<maxLength)
-		neurons_out[idx]= (random[idx] < neurons_in[idx]) ? 1. : 0.;
+		neurons_out[idx]= (random < neurons_in[idx]) ? 1. : 0.;
 };
 
 
