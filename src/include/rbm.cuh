@@ -69,8 +69,7 @@ class RBM{
 		 */ 
 		float *scratch;
 		float *d_randomNumbers;
-		unsigned int *d_randomNumberSeeds0;
-		unsigned int *d_randomNumberSeeds1;
+		unsigned int *d_randomNumberSeeds;
 		int amountOfRandomNumbers;
 		unsigned int seedm0;
 		unsigned int seedm1;

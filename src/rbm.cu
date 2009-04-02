@@ -158,32 +158,25 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 			checkError(status);
 		}
 		if (layerSizes[layer]+labelSizes[layer]>amountOfRandomNumbers)
-			amountOfRandomNumbers=layerSizes[layer]+labelSizes[layer];
+			amountOfRandomNumbers=1+layerSizes[layer]+labelSizes[layer];
 	}
 
 	amountOfRandomNumbers*=batchSize;
 	scratch=new float[amountOfRandomNumbers];
-	unsigned int* seeds0;
-	unsigned int* seeds1;
-	seeds0=new unsigned int[amountOfRandomNumbers];
-	seeds1=new unsigned int[amountOfRandomNumbers];
+	unsigned int* seeds;
+	seeds=new unsigned int[amountOfRandomNumbers*2];
 
 	seedm0 = 521288629u;
 	seedm1 = 362436069u;
-	for( int i=0 ; i<amountOfRandomNumbers ; i++ )
+	for( int i=0 ; i<amountOfRandomNumbers*2 ; i++ )
 	{
    		seedm0 = 18000u * (seedm0 & 0xFFFFu) + (seedm0 >> 16);
    		seedm1 = 30903u * (seedm1 & 0xFFFFu) + (seedm1 >> 16);
-		seeds0[i] = (seedm0 << 16) + (seedm1 & 0xFFFFu);
-   		seedm0 = 18000u * (seedm0 & 0xFFFFu) + (seedm0 >> 16);
-   		seedm1 = 30903u * (seedm1 & 0xFFFFu) + (seedm1 >> 16);
-		seeds1[i] = (seedm0 << 16) + (seedm1 & 0xFFFFu);
+		seeds[i] = (seedm0 << 16) + (seedm1 & 0xFFFFu);
 	}
 	status |= cublasAlloc(amountOfRandomNumbers, sizeof(float), (void**)&d_randomNumbers);
-	status |= cublasAlloc(amountOfRandomNumbers, sizeof(float), (void**)&d_randomNumberSeeds0);
-	status |= cublasAlloc(amountOfRandomNumbers, sizeof(float), (void**)&d_randomNumberSeeds1);
-    cublasSetVector(amountOfRandomNumbers, sizeof(float), seeds0, 1, d_randomNumberSeeds0, 1);
-    cublasSetVector(amountOfRandomNumbers, sizeof(float), seeds1, 1, d_randomNumberSeeds1, 1);
+	status |= cublasAlloc(amountOfRandomNumbers*2, sizeof(float), (void**)&d_randomNumberSeeds);
+    cublasSetVector(amountOfRandomNumbers*2, sizeof(float), seeds, 1, d_randomNumberSeeds, 1);
     cublasSetVector(amountOfRandomNumbers, sizeof(float), scratch, 1, d_randomNumbers, 1);
 	
 	cudaThreadSynchronize();
@@ -285,7 +278,7 @@ void RBM::pushDown(int layer, bool input_t0, bool output_t0, bool useProbabiliti
 	checkError(cublasGetError());
 	
 	//cutoff kernel
-	cutoff<<<numberOfBlocks,blockSize>>>(d_input_p, d_input, d_randomNumberSeeds0, d_randomNumberSeeds1, inputBatchSize);
+	cutoff<<<numberOfBlocks,blockSize>>>(d_input_p, d_input, d_randomNumberSeeds, inputBatchSize);
 	checkError(cublasGetError());
 
 };
@@ -342,7 +335,7 @@ void RBM::pushUp(int layer, bool input_t0, bool output_t0, bool useProbabilities
 	cudaThreadSynchronize();
 	
 	//cutoff kernel
-	cutoff<<<numberOfBlocks,blockSize>>>(d_output_p, d_output, d_randomNumberSeeds0, d_randomNumberSeeds1, outputBatchSize);
+	cutoff<<<numberOfBlocks,blockSize>>>(d_output_p, d_output, d_randomNumberSeeds, outputBatchSize);
 	checkError(cublasGetError());
 	cudaThreadSynchronize();
 
