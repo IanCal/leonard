@@ -1,12 +1,12 @@
 /*
  *   This file is part of Leonard.
  *
- *   Foobar is free software: you can redistribute it and/or modify
+ *   Leonard is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation, either version 3 of the License, or
  *   (at your option) any later version.
  *
- *   Foobar is distributed in the hope that it will be useful,
+ *   Leonard is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU General Public License for more details.
@@ -58,10 +58,11 @@ int main(int argc, char *argv[])
 	int testingSize=8000;
 	int fileSize=atoi(argv[4]);
 	int epochs=atoi(argv[3]);
+	int batchsize=32;
 	SimpleController* basicController = new SimpleController(0.01,fileSize-testingSize,epochs);
 	BasicFileInput*   basicInput = new BasicFileInput(argv[1],argv[2],fileSize-testingSize);
 	BasicFileInput*   basicInputTest = new BasicFileInput(argv[1],argv[2],fileSize);
-	RBM *a = new RBM(layers,layerSizes,labelSizes,basicController,basicInput,32);
+	RBM *a = new RBM(layers,layerSizes,labelSizes,basicController,basicInput,batchsize);
 	basicInputTest->initialise(a);
 	basicInputTest->currentItem=fileSize-testingSize;
 	TestingHarness*   testHarness = new TestingHarness(basicInputTest);
@@ -71,15 +72,19 @@ int main(int argc, char *argv[])
 	
 	
 time_t start, end;
+int total=0;
 time(&start);
-	for( int i=0 ; i<epochs*layers*((fileSize-testingSize)/32) ; i++ )
+	for( int i=0 ; i<epochs*layers*((fileSize-testingSize)/batchsize) ; i++ )
 	{
+		total+=batchsize;
 		a->learningIteration();
 	}
 time(&end);
 float timetaken=difftime(end,start);
-printf("Took %f, running at a rate of %f/s\n",timetaken,float(fileSize*epochs)/timetaken);
-printf("MSE %f%\n",100.*testHarness->test(a,testingSize));
+printf("Took %f, running at a rate of %f/s\n",timetaken,float(total/layers)/timetaken);
+if (atoi(argv[5])>0)
+	printf("MSE %f%\n",100.*testHarness->test(a,testingSize));
+return 0;
 	printf("rain\n");
 	// testing of reading
 	// Start allegro	
