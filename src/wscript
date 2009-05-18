@@ -12,7 +12,7 @@ def build(bld):
 	# Add example compilation
 	bld.new_task_gen(
 		features = 'cxx cprogram',
-		source = 'example.cpp SimpleController.cpp BasicFileInput.cpp TestingHarness.cpp',
+		source = 'example.cpp SimpleController.cpp BasicFileInput.cpp TestingHarness.cpp Schema.cpp',
 		includes = '. include /usr/include',
 		uselib = 'LEONARD ALLEGRO',
 		target = 'leonardexample')
