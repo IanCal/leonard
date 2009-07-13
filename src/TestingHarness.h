@@ -15,14 +15,18 @@
  *   along with Leonard.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "include/InputSource.h"
+#include "include/ParameterController.h"
 #include "include/rbm.cuh"
 
 class TestingHarness{
 	public:
 		InputSource *testingInput;
+        ParameterController *parameterUpdater;
 
-		TestingHarness(InputSource *testInput);
+
+		TestingHarness(InputSource *testInput, ParameterController *parameterController);
 		float test(RBM *RBMToTest, int iterations);
+		float train(RBM *RBMToTest, int iterations);
 
 };
 

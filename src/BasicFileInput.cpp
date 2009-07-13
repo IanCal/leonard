@@ -85,7 +85,7 @@ void BasicFileInput::setLabelsFile(char *filename, int fileLength, int labelSize
 };
 
 
-float* BasicFileInput::getNextInput(RBM *currentRBM)
+void BasicFileInput::getNextInput(RBM *currentRBM)
 {
 	if (!initialised){
 		initialise(currentRBM);
@@ -109,10 +109,10 @@ float* BasicFileInput::getNextInput(RBM *currentRBM)
 		iteratedOverLabels=false;
 		iteratedOverImages=false;
 	}
-	return inputColumnMajor;
+	currentRBM->setInputPattern(inputColumnMajor);
 };
 
-float** BasicFileInput::getNextLabel(RBM *currentRBM)
+void BasicFileInput::getNextLabel(RBM *currentRBM)
 {
 	if (!initialised){
 		initialise(currentRBM);
@@ -153,7 +153,7 @@ float** BasicFileInput::getNextLabel(RBM *currentRBM)
 		iteratedOverLabels=false;
 		iteratedOverImages=false;
 	}
-	return labelsColumnMajor;
+	currentRBM->setLabels(labelsColumnMajor);
 };
 void BasicFileInput::initialise(RBM *currentRBM)
 {

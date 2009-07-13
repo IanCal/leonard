@@ -45,8 +45,8 @@ class BasicFileInput: public InputSource{
 		void setImagesFile(char *filename, int length, int itemSize, int batchSize);
 		void setLabelsFile(char *filename, int fileLength, int labelSize, int layers, int batchSize);
 		
-		float* getNextInput(RBM *currentRBM);
-		float** getNextLabel(RBM *currentRBM);
+		void getNextInput(RBM *currentRBM);
+		void getNextLabel(RBM *currentRBM);
 
 		void initialise(RBM *currentRBM);
 };

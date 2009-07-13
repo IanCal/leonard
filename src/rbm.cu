@@ -37,8 +37,6 @@
 #include "cublas.h"
 #include "kernels.cu"
 #include "include/rbm.cuh"
-#include "include/ParameterController.h"
-#include "include/InputSource.h"
 
 void checkError(cublasStatus status, char *message = NULL){
 	
@@ -75,7 +73,7 @@ void checkError(cublasStatus status, char *message = NULL){
  * The constructor.
  * @param numLayers This is the number of layers to create. It is the number of layers of neurons.
  */
-RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterController *parameterController, InputSource *inputSource, int batchSize){
+RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, int batchSize){
 	printf("Creating RBM with \n");
 	CDSamples=1;
 	this->batchSize=batchSize;
@@ -98,10 +96,6 @@ RBM::RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterControlle
 		weightDecay[layer]=1.f;
 	}
 	
-	parameterUpdater = parameterController; 	
-	parameterUpdater->initialise(this);
-	this->inputSource=inputSource;
-	inputSource->initialise(this);
 	this->batchSize=batchSize;
 	cublasStatus status;
 	status =  CUBLAS_STATUS_SUCCESS;
@@ -435,14 +429,13 @@ void RBM::updateWeights(){
 
 };
 
-void RBM::setInputPattern(){
+void RBM::setInputPattern(float *inputPattern){
 	// Set the input 
-    cublasSetVector(layerSizes[0]*batchSize, sizeof(float), (inputSource->getNextInput(this)), 1, d_input_pt0[0], 1);
+    cublasSetVector(layerSizes[0]*batchSize, sizeof(float), inputPattern, 1, d_input_pt0[0], 1);
 	checkError(cublasGetError());
 };
 
-void RBM::setLabels(){
-	float **currentLabels = inputSource->getNextLabel(this);
+void RBM::setLabels(float **currentLabels){
 	for( int layer=0 ; layer<numberOfNeuronLayers ; layer++ )
 	{
 		if( labelSizes[layer]>0 )
@@ -454,10 +447,9 @@ void RBM::setLabels(){
 	
 };
 
-void RBM::classify(){
+void RBM::classify(bool clearLabels){
 
-	setInputPattern();
-	setLabels();
+    //TODO: clearLabels
 
 	for( int layer=0 ; layer<numberOfWeightLayers; layer++ ){
 		if( labelSizes[layer]==0.0 ){
@@ -485,10 +477,3 @@ void RBM::getInput(int layer, float *output, bool reconstruction){
 	checkError(cublasGetError());
 };
 
-void RBM::learningIteration(){
-	setInputPattern();
-	setLabels();
-	updateWeights();
-	parameterUpdater->updateParameters(this);
-	//generateRandomNumbers(1.0f);
-};

@@ -21,8 +21,8 @@ class InputSource{
 	public:
 		int maxLabels;
 		InputSource(){};
-		virtual float* getNextInput(RBM *currentRBM){return 0;};
-		virtual float** getNextLabel(RBM *currentRBM){return 0;};
+		virtual void getNextInput(RBM *currentRBM){};
+		virtual void getNextLabel(RBM *currentRBM){};
 		virtual void initialise(RBM *currentRBM){maxLabels=0;};
 };
 #endif

@@ -20,8 +20,22 @@
 #include <stdio.h>
 
 
-TestingHarness::TestingHarness(InputSource *testInput){
+TestingHarness::TestingHarness(InputSource *testInput, ParameterController *parameterController){
 	this->testingInput = testInput;
+    this->parameterUpdater = parameterController;
+};
+
+float TestingHarness::train(RBM *RBMToTest, int iterations){
+
+    parameterUpdater->initialise(RBMToTest);
+
+    for (int i = 0; i < iterations / (RBMToTest->batchSize) ; i++) {
+        testingInput->getNextInput(RBMToTest);
+        testingInput->getNextLabel(RBMToTest);
+        RBMToTest->updateWeights();
+        parameterUpdater->updateParameters(RBMToTest);
+    }
+
 };
 
 float TestingHarness::test(RBM *RBMToTest, int iterations){
@@ -36,13 +50,11 @@ float TestingHarness::test(RBM *RBMToTest, int iterations){
 	float initial[batchSize * testingInput->maxLabels];
 	float reconstruction[batchSize * testingInput->maxLabels];
 
-	// Make sure we leave it as we found it!
-	InputSource *previousInputSource = RBMToTest->inputSource;
-	RBMToTest->inputSource = testingInput;
-
 	for( int i=0 ; i<iterations ; i++ )
 	{
-		RBMToTest->classify();
+		testingInput->getNextInput(RBMToTest);
+        testingInput->getNextLabel(RBMToTest);
+        RBMToTest->classify();
 		for( int layer=0 ; layer<RBMToTest->numberOfNeuronLayers ; layer++ )
 		{
 			if( RBMToTest->labelSizes[layer]!=0 )
@@ -93,7 +105,5 @@ float TestingHarness::test(RBM *RBMToTest, int iterations){
 	printf("Total errors: %f\n",errorProportion);
 	mse /= batchSize*iterations;
 	errorProportion /= batchSize*iterations;
-	// Make sure we leave it as we found it!
-	RBMToTest->inputSource = previousInputSource;
 	return errorProportion;
 };

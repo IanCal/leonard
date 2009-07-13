@@ -52,6 +52,8 @@ void drawImage(BITMAP *buffer, int xPos, int yPos, int scale, int width, int hei
 
 int main(int argc, char *argv[])
 {
+    if (argc < 4)
+        printf("Oops:\n1) ImagesFile \n2)  LabelsFile \n3) Number of epochs \n4) Filesize\n");
 	int layers=4;
 	int layerSizes[4] = {784,512,512,2048};
 	int labelSizes[4] = {0,0,10,0};
@@ -59,13 +61,10 @@ int main(int argc, char *argv[])
 	int fileSize=atoi(argv[4]);
 	int epochs=atoi(argv[3]);
 	int batchsize=32;
-	SimpleController* basicController = new SimpleController(0.01,fileSize-testingSize,epochs);
-	BasicFileInput*   basicInput = new BasicFileInput(argv[1],argv[2],fileSize-testingSize);
-	BasicFileInput*   basicInputTest = new BasicFileInput(argv[1],argv[2],fileSize);
-	RBM *a = new RBM(layers,layerSizes,labelSizes,basicController,basicInput,batchsize);
-	basicInputTest->initialise(a);
-	basicInputTest->currentItem=fileSize-testingSize;
-	TestingHarness*   testHarness = new TestingHarness(basicInputTest);
+	SimpleController* basicController = new SimpleController(0.01,fileSize,epochs);
+	BasicFileInput*   basicInput = new BasicFileInput(argv[1],argv[2],fileSize);
+	RBM *rbm = new RBM(layers,layerSizes,labelSizes,batchsize);
+	TestingHarness*   testHarness = new TestingHarness(basicInput, basicController);
 	
 	printf("Created RBM\n");
 	printf("Trying to train\n");
@@ -74,16 +73,12 @@ int main(int argc, char *argv[])
 time_t start, end;
 int total=0;
 time(&start);
-	for( int i=0 ; i<epochs*layers*((fileSize-testingSize)/batchsize) ; i++ )
-	{
-		total+=batchsize;
-		a->learningIteration();
-	}
+    testHarness->train(rbm, fileSize*epochs*layers);
 time(&end);
 float timetaken=difftime(end,start);
 printf("Took %f, running at a rate of %f/s\n",timetaken,float(total/layers)/timetaken);
 if (atoi(argv[5])>0)
-	printf("MSE %f%\n",100.*testHarness->test(a,testingSize));
+	printf("MSE %f%\n",100.*testHarness->test(rbm,testingSize));
 return 0;
 	printf("rain\n");
 	// testing of reading
@@ -117,15 +112,15 @@ return 0;
 	float *original = new float[784*32];
 	float *labels = new float[10*32];
 	float *labelsrec  = new float[10*32];
-	a->classify();
-	a->getLabels(2,labels, true);
-	printf("#labels %d\n",a->labelSizes[2]);
+	//a->classify();
+	rbm->getLabels(2,labels, true);
+	printf("#labels %d\n",rbm->labelSizes[2]);
 	buffer = create_bitmap(SCREEN_W, SCREEN_H);
 	set_palette(desktop_palette);
 	//Drawing loop
 	while (!key[KEY_ESC]){
 		if (key[KEY_DOWN]){
-			a->classify();
+			/*//a->classify();
 			a->pushDown(2,false,true,true);
 			a->pushDown(1,false,false,true);
 			a->pushDown(0,false,false,true);
@@ -140,7 +135,8 @@ return 0;
 			a->getInput(3,layer3rec,true);
 			a->getLabels(2,labels, false);
 			a->getLabels(2,labelsrec, true);
-			rest(10);
+			*/
+            rest(10);
 		}
 		else{
 			rest(10);

@@ -28,21 +28,9 @@ class RBM{
 
 	public:
 	
-		RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, ParameterController *parameterController, InputSource *inputSource, int batchSize);
+		RBM(int numLayers, int *sizeOfLayers, int *sizeOfLabels, int batchSize);
 
 
-		/** 
-		 * This is used to update the parameters like the learning rates
-		 * momentum, decay, etc. ParameterUpdater is an abstract class, there are
-		 * certain functions which must be called. Other than that, go
-		 * wild.
-		 */
-		ParameterController *parameterUpdater;
-		/**
-		 * This controls the input images. It must take care of all memory related to
-		 * reading in the images. 
-		 */ 
-		InputSource *inputSource;
 		//! This is the number of images to pass every iteration.
 		int batchSize;
 		//! The number of contrastive divergence samples to be taken. Default is 1.
@@ -124,16 +112,15 @@ class RBM{
 
 		void updateWeightsInLayer(int layer);
 		void updateWeights();
-		void setInputPattern();
-		void setLabels();
+		void setInputPattern(float *inputPattern);
+		void setLabels(float **currentLabels);
 		void getInput(int layer, float *output, bool reconstruction);
 		void getLabels(int layer, float *output, bool reconstruction);
-		void learningIteration();
 		void updateBiasesInLayer(int layer);
 		void generateRandomNumbers(float scale);
 		void setValue(float *device_array, int size, float value=0.f);
 		void setRandom(float *device_array, int size, float scale);
-		void classify();
+		void classify(bool clearLabels=false);
 };	
 #endif
 
