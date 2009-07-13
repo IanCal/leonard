@@ -47,6 +47,8 @@ void SimpleController::updateParameters(RBM *currentRBM){
 		{
 			currentRBM->learningRates[layer]=0.;	
 			currentRBM->biasLearningRates[layer]=0.;
+			currentRBM->learningRates[layer]=learningRate;
+			currentRBM->biasLearningRates[layer]=learningRate*0.05;
 		}
 		if (layerToTrain<currentRBM->numberOfWeightLayers)
 		{
